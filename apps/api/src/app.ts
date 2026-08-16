@@ -1,6 +1,7 @@
 import express from 'express';
 import type { Express, Request, Response } from 'express';
 import { prisma } from './platform/prisma.js';
+import { errorHandler, notFoundHandler } from './platform/middleware/errorHandler.js';
 
 export function createApp(): Express {
   const app = express();
@@ -24,5 +25,11 @@ export function createApp(): Express {
 });
 
 
+  app.use(notFoundHandler);
+  app.use(errorHandler);
+
   return app;
+
+
 }
+
