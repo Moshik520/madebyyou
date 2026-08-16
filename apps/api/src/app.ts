@@ -2,9 +2,22 @@ import express from 'express';
 import type { Express, Request, Response } from 'express';
 import { prisma } from './platform/prisma.js';
 import { errorHandler, notFoundHandler } from './platform/middleware/errorHandler.js';
+import { pinoHttp } from 'pino-http';  
+import { logger } from './platform/logger.js';
 
 export function createApp(): Express {
   const app = express();
+
+  app.use(
+  pinoHttp({
+    logger,
+    serializers: {
+      req: (req) => ({ id: req.id, method: req.method, url: req.url }),
+      res: (res) => ({ statusCode: res.statusCode }),
+    },
+  }),
+);
+
 
   app.use(express.json());
 
