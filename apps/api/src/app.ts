@@ -4,6 +4,8 @@ import { prisma } from './platform/prisma.js';
 import { errorHandler, notFoundHandler } from './platform/middleware/errorHandler.js';
 import { pinoHttp } from 'pino-http';  
 import { logger } from './platform/logger.js';
+import { authRouter } from './modules/auth/auth.routes.js';
+
 
 export function createApp(): Express {
   const app = express();
@@ -37,6 +39,7 @@ export function createApp(): Express {
   }
 });
 
+  app.use('/api/auth', authRouter);
 
   app.use(notFoundHandler);
   app.use(errorHandler);

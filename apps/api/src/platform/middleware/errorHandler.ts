@@ -2,6 +2,7 @@ import type { ErrorRequestHandler, RequestHandler } from 'express';
 import { z, ZodError } from 'zod';
 import { AppError } from '../errors.js';
 import { config } from '../config.js';
+import { logger } from '../logger.js';
 
 export const notFoundHandler: RequestHandler = (req, res) => {
   res.status(404).json({
@@ -13,6 +14,13 @@ export const notFoundHandler: RequestHandler = (req, res) => {
 };
 
 export const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
+    if (err instanceof SyntaxError && 'body' in err) {
+    res.status(400).json({
+      error: { code: 'INVALID_JSON', message: 'Request body is not valid JSON' },
+    });
+    return;
+  }
+
   if (err instanceof AppError) {
     res.status(err.statusCode).json({
       error: { code: err.code, message: err.message, details: err.details },
@@ -31,7 +39,8 @@ export const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
     return;
   }
 
-  console.error('Unhandled error:', err);
+  logger.error({ err }, 'unhandled error');
+
 
   res.status(500).json({
     error: {
