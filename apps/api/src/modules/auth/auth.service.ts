@@ -41,6 +41,8 @@ export async function registerUser(input: RegisterInput) {
 
 const dummyHash = hashPassword(randomUUID());
 
+
+
 export async function loginUser(input: LoginInput) {
   const user = await prisma.user.findUnique({
     where: { email: input.email },
@@ -64,3 +66,17 @@ export async function loginUser(input: LoginInput) {
     user: { id: user.id, email: user.email, name: user.name },
   };
 }
+
+export async function getUserById(userId: string) {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { id: true, email: true, name: true, createdAt: true },
+  });
+
+  if (!user) {
+    throw new UnauthorizedError('User no longer exists');
+  }
+
+  return user;
+}
+
