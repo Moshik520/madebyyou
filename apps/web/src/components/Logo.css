@@ -1,0 +1,21 @@
+.logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  direction: ltr;
+}
+
+.logo svg {
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.25));
+}
+
+.logo__word {
+  font-size: 1.35rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: var(--white);
+}
+
+.logo__word--accent {
+  color: var(--brand-yellow);
+}

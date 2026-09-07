@@ -1,0 +1,174 @@
+.hero {
+  background: var(--brand-yellow);
+  padding-block: 72px 88px;
+  overflow: hidden;
+}
+
+.hero__inner {
+  display: grid;
+  grid-template-columns: 1.1fr 0.9fr;
+  gap: 48px;
+  align-items: center;
+}
+
+.hero__badge {
+  display: inline-block;
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.65);
+  font-size: 0.9rem;
+  font-weight: 700;
+  margin-bottom: 18px;
+}
+
+.hero__title {
+  font-size: clamp(2rem, 1.2rem + 3.4vw, 3.4rem);
+  font-weight: 800;
+  line-height: 1.15;
+  margin-bottom: 18px;
+}
+
+.hero__lead {
+  font-size: 1.1rem;
+  line-height: 1.8;
+  color: #43382a;
+  max-width: 52ch;
+  margin-bottom: 32px;
+}
+
+/* ---------- buttons ---------- */
+.hero__actions {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.btn {
+  padding: 14px 30px;
+  border-radius: var(--radius-sm);
+  font-weight: 700;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: transform 0.15s ease, background-color 0.2s ease;
+}
+
+.btn--primary {
+  border: none;
+  background: var(--ink);
+  color: var(--white);
+  box-shadow: var(--shadow);
+}
+
+.btn--primary:hover {
+  background: #1d3446;
+  transform: translateY(-2px);
+}
+
+.btn--ghost {
+  border: 2px solid rgba(18, 33, 46, 0.25);
+  background: transparent;
+  color: var(--ink);
+}
+
+.btn--ghost:hover {
+  background: rgba(255, 255, 255, 0.5);
+  transform: translateY(-2px);
+}
+
+/* ---------- illustration ---------- */
+.hero__art {
+  position: relative;
+  min-height: 320px;
+  display: grid;
+  place-items: center;
+}
+
+.hero__shirt {
+  width: 260px;
+  height: 290px;
+  background: var(--white);
+  border-radius: 28px 28px 20px 20px;
+  box-shadow: var(--shadow-lift);
+  display: grid;
+  place-items: center;
+  position: relative;
+}
+
+.hero__shirt::before,
+.hero__shirt::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  width: 58px;
+  height: 74px;
+  background: var(--white);
+  border-radius: 18px;
+  box-shadow: var(--shadow-sm);
+}
+
+.hero__shirt::before {
+  right: -42px;
+  transform: rotate(10deg);
+}
+
+.hero__shirt::after {
+  left: -42px;
+  transform: rotate(-10deg);
+}
+
+.hero__print {
+  width: 150px;
+  height: 150px;
+  border: 3px dashed var(--brand-blue);
+  border-radius: var(--radius);
+  display: grid;
+  place-items: center;
+  color: var(--brand-blue-dark);
+  font-weight: 700;
+  background: var(--brand-blue-soft);
+}
+
+.hero__bubble {
+  position: absolute;
+  padding: 10px 16px;
+  border-radius: 18px;
+  font-size: 0.92rem;
+  font-weight: 600;
+  box-shadow: var(--shadow);
+  white-space: nowrap;
+}
+
+.hero__bubble--user {
+  top: 6px;
+  inset-inline-start: -8px;
+  background: var(--white);
+  color: var(--ink);
+  border-end-start-radius: 4px;
+}
+
+.hero__bubble--bot {
+  bottom: 10px;
+  inset-inline-end: -6px;
+  background: var(--brand-blue);
+  color: var(--white);
+  border-end-end-radius: 4px;
+}
+
+@media (max-width: 880px) {
+  .hero__inner {
+    grid-template-columns: 1fr;
+    text-align: center;
+  }
+
+  .hero__lead {
+    margin-inline: auto;
+  }
+
+  .hero__actions {
+    justify-content: center;
+  }
+
+  .hero__bubble {
+    display: none;
+  }
+}
