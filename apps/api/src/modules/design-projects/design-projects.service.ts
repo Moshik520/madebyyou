@@ -46,3 +46,20 @@ export async function listDesignProjects(userId: string) {
     orderBy: { updatedAt: 'desc' },
   });
 }
+
+export async function getDesignProject(userId: string, projectId: string) {
+  const project = await prisma.designProject.findFirst({
+    where: {
+      id: projectId,
+      userId,
+    },
+    select: projectSelect,
+  });
+
+  if (!project) {
+    throw new NotFoundError('Design project not found');
+  }
+
+  return project;
+}
+
