@@ -5,6 +5,8 @@ import { errorHandler, notFoundHandler } from './platform/middleware/errorHandle
 import { pinoHttp } from 'pino-http';  
 import { logger } from './platform/logger.js';
 import { authRouter } from './modules/auth/auth.routes.js';
+import { productsRouter } from './modules/products/products.routes.js';
+
 
 
 export function createApp(): Express {
@@ -40,7 +42,7 @@ export function createApp(): Express {
 });
 
   app.use('/api/auth', authRouter);
-
+  app.use('/api/products', productsRouter); 
   app.use(notFoundHandler);
   app.use(errorHandler);
 
