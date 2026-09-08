@@ -1,0 +1,122 @@
+.product-page__crumbs {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.92rem;
+  color: var(--muted);
+  margin-bottom: 28px;
+}
+
+.product-page__crumbs a {
+  color: var(--brand-blue-dark);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.product-page__crumbs a:hover {
+  text-decoration: underline;
+}
+
+.product-page__grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 48px;
+  align-items: start;
+}
+
+.product-page__media {
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  background: var(--brand-blue-soft);
+  box-shadow: var(--shadow);
+  aspect-ratio: 1 / 1;
+}
+
+.product-page__media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.product-page__name {
+  font-size: clamp(1.8rem, 1.2rem + 2vw, 2.6rem);
+  font-weight: 800;
+  margin-bottom: 14px;
+}
+
+.product-page__desc {
+  color: var(--muted);
+  font-size: 1.05rem;
+  line-height: 1.8;
+  margin-bottom: 22px;
+}
+
+.product-page__price {
+  font-size: 2rem;
+  font-weight: 800;
+  margin-bottom: 26px;
+}
+
+.product-page__features {
+  list-style: none;
+  margin: 0 0 30px;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+}
+
+.product-page__features li {
+  position: relative;
+  padding-inline-start: 28px;
+  color: var(--ink);
+}
+
+.product-page__features li::before {
+  content: '✓';
+  position: absolute;
+  inset-inline-start: 0;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--brand-yellow);
+  display: grid;
+  place-items: center;
+  font-size: 0.75rem;
+  font-weight: 800;
+}
+
+.product-page__actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.product-page__note {
+  margin-top: 18px;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.product-page__error {
+  text-align: center;
+}
+
+.product-page__skeleton {
+  height: 420px;
+  border-radius: var(--radius-lg);
+  background: linear-gradient(
+    100deg,
+    var(--brand-blue-soft) 30%,
+    #f2f8fd 50%,
+    var(--brand-blue-soft) 70%
+  );
+  background-size: 220% 100%;
+  animation: product-shimmer 1.3s ease-in-out infinite;
+}
+
+@media (max-width: 880px) {
+  .product-page__grid {
+    grid-template-columns: 1fr;
+    gap: 28px;
+  }
+}

@@ -81,3 +81,22 @@
     margin-inline-start: auto;
   }
 }
+
+.navbar__account {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.navbar__user {
+  color: var(--white);
+  font-weight: 600;
+  font-size: 0.95rem;
+  white-space: nowrap;
+}
+
+a.navbar__cta {
+  text-decoration: none;
+  display: inline-block;
+}

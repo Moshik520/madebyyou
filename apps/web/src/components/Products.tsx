@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { fetchProducts, type Product } from '../lib/api';
 import './Products.css';
 
@@ -59,21 +60,26 @@ export function Products() {
           <div className="products__grid">
             {products.map((product) => (
               <article className="product-card" key={product.id}>
-                <div className="product-card__media">
+                <Link className="product-card__media" to={`/products/${product.slug}`}>
                   <img src={product.imageUrl} alt={product.name} loading="lazy" />
-                </div>
+                </Link>
 
                 <div className="product-card__body">
-                  <h3 className="product-card__name">{product.name}</h3>
+                  <h3 className="product-card__name">
+                    <Link to={`/products/${product.slug}`}>{product.name}</Link>
+                  </h3>
                   <p className="product-card__desc">{product.description}</p>
 
                   <div className="product-card__footer">
                     <span className="product-card__price">
                       {priceFormatter.format(Number(product.basePrice))}
                     </span>
-                    <button className="product-card__cta" type="button">
+                    <Link
+                      className="product-card__cta"
+                      to={`/products/${product.slug}`}
+                    >
                       עיצוב אישי
-                    </button>
+                    </Link>
                   </div>
                 </div>
               </article>

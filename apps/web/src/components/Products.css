@@ -122,3 +122,23 @@
   background: #fdecec;
   color: #a12525;
 }
+
+/* card links */
+.product-card__media {
+  display: block;
+}
+
+.product-card__name a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.product-card__name a:hover {
+  color: var(--brand-blue-dark);
+}
+
+.product-card__cta {
+  display: inline-block;
+  text-decoration: none;
+  color: var(--ink);
+}
