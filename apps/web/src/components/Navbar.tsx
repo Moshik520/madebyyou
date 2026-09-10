@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { useAuth } from '../auth/useAuth';
+import { useCart } from '../cart/useCart';
 import { Logo } from './Logo';
 import './Logo.css';
 import './Navbar.css';
@@ -12,6 +13,9 @@ const links = [
 
 export function Navbar() {
   const { user, loading, signOut } = useAuth();
+  const { cart } = useCart();
+
+  const itemCount = cart?.itemCount ?? 0;
 
   return (
     <header className="navbar">
@@ -31,6 +35,13 @@ export function Navbar() {
         </ul>
 
         <div className="navbar__account">
+          <Link className="navbar__cart" to="/cart" aria-label="העגלה שלי">
+            <span aria-hidden="true">🛒</span>
+            {itemCount > 0 && (
+              <span className="navbar__badge">{itemCount}</span>
+            )}
+          </Link>
+
           {loading ? null : user ? (
             <>
               <span className="navbar__user">

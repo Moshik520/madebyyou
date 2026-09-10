@@ -100,3 +100,36 @@ a.navbar__cta {
   text-decoration: none;
   display: inline-block;
 }
+
+.navbar__cart {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border-radius: var(--radius-sm);
+  font-size: 1.25rem;
+  text-decoration: none;
+  transition: background-color 0.2s ease;
+}
+
+.navbar__cart:hover {
+  background: rgba(255, 255, 255, 0.22);
+}
+
+.navbar__badge {
+  position: absolute;
+  top: 2px;
+  inset-inline-end: 2px;
+  min-width: 19px;
+  height: 19px;
+  padding-inline: 5px;
+  border-radius: 999px;
+  background: var(--brand-yellow);
+  color: var(--ink);
+  font-size: 0.72rem;
+  font-weight: 800;
+  display: grid;
+  place-items: center;
+  line-height: 1;
+}

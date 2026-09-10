@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
+import { useAuth } from '../auth/useAuth';
+import { useCart } from '../cart/useCart';
 import { ApiError, fetchProduct, type Product } from '../lib/api';
 import './ProductPage.css';
 
@@ -10,6 +12,9 @@ const priceFormatter = new Intl.NumberFormat('he-IL', {
 
 export function ProductPage() {
   const { slug } = useParams<{ slug: string }>();
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const { addItem, busy } = useCart();
 
   const [product, setProduct] = useState<Product | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -38,6 +43,22 @@ export function ProductPage() {
       cancelled = true;
     };
   }, [slug]);
+
+  async function handleAddToCart() {
+    if (!product) return;
+
+    if (!user) {
+      navigate('/login');
+      return;
+    }
+
+    try {
+      await addItem(product.slug, 1);
+      navigate('/cart');
+    } catch {
+      /* the cart provider already surfaced the error */
+    }
+  }
 
   if (error) {
     return (
@@ -91,16 +112,21 @@ export function ProductPage() {
             </ul>
 
             <div className="product-page__actions">
-              <button className="btn btn--primary" type="button">
-                התחילו לעצב
+              <button
+                className="btn btn--primary"
+                type="button"
+                disabled={busy}
+                onClick={handleAddToCart}
+              >
+                {busy ? 'מוסיף…' : 'הוספה לעגלה'}
               </button>
-              <button className="btn btn--ghost" type="button">
-                הוספה לעגלה
+              <button className="btn btn--ghost" type="button" disabled>
+                התחילו לעצב
               </button>
             </div>
 
             <p className="product-page__note">
-              הכפתורים עדיין לא מחוברים — נחבר אותם בצעדים הבאים.
+              עיצוב אישי עם הסוכן יתווסף בשלב מאוחר יותר.
             </p>
           </div>
         </div>
