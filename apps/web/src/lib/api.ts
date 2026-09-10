@@ -98,3 +98,53 @@ export function register(
 export function fetchMe(): Promise<{ user: AuthUser }> {
   return request('/auth/me');
 }
+
+/* ---------- Cart ---------- */
+
+export type CartItem = {
+  id: string;
+  quantity: number;
+  unitPrice: string;
+  lineTotal: string;
+  product: {
+    id: string;
+    slug: string;
+    name: string;
+    imageUrl: string;
+  };
+};
+
+export type Cart = {
+  id: string;
+  items: CartItem[];
+  itemCount: number;
+  subtotal: string;
+};
+
+export function fetchCart(): Promise<{ cart: Cart }> {
+  return request('/cart');
+}
+
+export function addToCart(
+  productId: string,
+  quantity = 1,
+): Promise<{ cart: Cart }> {
+  return request('/cart/items', {
+    method: 'POST',
+    body: JSON.stringify({ productId, quantity }),
+  });
+}
+
+export function updateCartItem(
+  itemId: string,
+  quantity: number,
+): Promise<{ cart: Cart }> {
+  return request(`/cart/items/${itemId}`, {
+    method: 'PATCH',
+    body: JSON.stringify({ quantity }),
+  });
+}
+
+export function removeCartItem(itemId: string): Promise<{ cart: Cart }> {
+  return request(`/cart/items/${itemId}`, { method: 'DELETE' });
+}
