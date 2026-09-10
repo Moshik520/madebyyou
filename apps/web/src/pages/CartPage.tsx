@@ -1,20 +1,35 @@
-import { Link } from 'react-router-dom';
+import { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { useCart } from '../cart/useCart';
 import { useAuth } from '../auth/useAuth';
+import { createOrder } from '../lib/api';
+import { formatPrice } from '../lib/format';
 import './CartPage.css';
-
-const priceFormatter = new Intl.NumberFormat('he-IL', {
-  style: 'currency',
-  currency: 'ILS',
-});
-
-function formatPrice(value: string) {
-  return priceFormatter.format(Number(value));
-}
 
 export function CartPage() {
   const { user, loading } = useAuth();
-  const { cart, busy, error, setQuantity, removeItem } = useCart();
+  const { cart, busy, error, setQuantity, removeItem, refresh } = useCart();
+  const navigate = useNavigate();
+
+  const [checkingOut, setCheckingOut] = useState(false);
+  const [checkoutError, setCheckoutError] = useState<string | null>(null);
+
+  async function handleCheckout() {
+    setCheckingOut(true);
+    setCheckoutError(null);
+
+    try {
+      const data = await createOrder();
+      await refresh();
+      navigate(`/orders/${data.order.id}`);
+    } catch (err: unknown) {
+      setCheckoutError(
+        err instanceof Error ? err.message : 'לא הצלחנו ליצור את ההזמנה',
+      );
+    } finally {
+      setCheckingOut(false);
+    }
+  }
 
   if (loading) {
     return null;
@@ -41,7 +56,9 @@ export function CartPage() {
       <div className="container">
         <h1 className="section__title">העגלה שלך</h1>
 
-        {error && <div className="cart__error">{error}</div>}
+        {(error || checkoutError) && (
+          <div className="cart__error">{checkoutError ?? error}</div>
+        )}
 
         {isEmpty ? (
           <div className="cart__empty">
@@ -126,12 +143,15 @@ export function CartPage() {
               <button
                 className="btn btn--primary cart__checkout"
                 type="button"
-                disabled={busy}
+                disabled={busy || checkingOut}
+                onClick={() => void handleCheckout()}
               >
-                למעבר לתשלום
+                {checkingOut ? 'יוצר הזמנה…' : 'ביצוע הזמנה'}
               </button>
 
-              <p className="cart__note">התשלום עדיין לא מחובר — הצעד הבא.</p>
+              <p className="cart__note">
+                ההזמנה תיווצר במצב "ממתינה לתשלום". התשלום יתווסף בצעד הבא.
+              </p>
             </aside>
           </div>
         )}

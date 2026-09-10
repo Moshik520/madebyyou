@@ -2,11 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { fetchProducts, type Product } from '../lib/api';
 import './Products.css';
-
-const priceFormatter = new Intl.NumberFormat('he-IL', {
-  style: 'currency',
-  currency: 'ILS',
-});
+import { formatPrice } from '../lib/format';
 
 export function Products() {
   const [products, setProducts] = useState<Product[] | null>(null);
@@ -72,7 +68,7 @@ export function Products() {
 
                   <div className="product-card__footer">
                     <span className="product-card__price">
-                      {priceFormatter.format(Number(product.basePrice))}
+                      {formatPrice(product.basePrice)}
                     </span>
                     <Link
                       className="product-card__cta"

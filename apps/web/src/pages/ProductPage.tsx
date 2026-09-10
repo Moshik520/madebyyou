@@ -4,11 +4,7 @@ import { useAuth } from '../auth/useAuth';
 import { useCart } from '../cart/useCart';
 import { ApiError, fetchProduct, type Product } from '../lib/api';
 import './ProductPage.css';
-
-const priceFormatter = new Intl.NumberFormat('he-IL', {
-  style: 'currency',
-  currency: 'ILS',
-});
+import { formatPrice } from '../lib/format';
 
 export function ProductPage() {
   const { slug } = useParams<{ slug: string }>();
@@ -102,7 +98,7 @@ export function ProductPage() {
             <p className="product-page__desc">{product.description}</p>
 
             <div className="product-page__price">
-              {priceFormatter.format(Number(product.basePrice))}
+              {formatPrice(product.basePrice)}
             </div>
 
             <ul className="product-page__features">

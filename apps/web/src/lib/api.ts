@@ -148,3 +148,41 @@ export function updateCartItem(
 export function removeCartItem(itemId: string): Promise<{ cart: Cart }> {
   return request(`/cart/items/${itemId}`, { method: 'DELETE' });
 }
+
+/* ---------- Orders ---------- */
+
+export type OrderStatus = 'PENDING' | 'PAID' | 'FAILED' | 'CANCELLED';
+
+export type OrderItem = {
+  id: string;
+  productId: string;
+  productName: string;
+  productSlug: string;
+  imageUrl: string;
+  unitPrice: string;
+  quantity: number;
+  lineTotal: string;
+};
+
+export type Order = {
+  id: string;
+  status: OrderStatus;
+  currency: string;
+  subtotal: string;
+  total: string;
+  paymentRef: string | null;
+  createdAt: string;
+  items: OrderItem[];
+};
+
+export function createOrder(): Promise<{ order: Order }> {
+  return request('/orders', { method: 'POST' });
+}
+
+export function fetchOrders(): Promise<{ orders: Order[] }> {
+  return request('/orders');
+}
+
+export function fetchOrder(orderId: string): Promise<{ order: Order }> {
+  return request(`/orders/${orderId}`);
+}

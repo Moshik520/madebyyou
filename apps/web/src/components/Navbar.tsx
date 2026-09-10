@@ -44,6 +44,9 @@ export function Navbar() {
 
           {loading ? null : user ? (
             <>
+              <Link className="navbar__link" to="/orders">
+                ההזמנות שלי
+              </Link>
               <span className="navbar__user">
                 שלום, {user.name ?? user.email}
               </span>
