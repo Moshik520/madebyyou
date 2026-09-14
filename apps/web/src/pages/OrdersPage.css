@@ -179,3 +179,123 @@
   border-radius: var(--radius);
   padding: 20px 24px;
 }
+
+/* ---------- payment ---------- */
+.pay {
+  margin-top: 30px;
+  max-width: 480px;
+  background: var(--white);
+  border: 1px solid rgba(18, 33, 46, 0.1);
+  border-radius: var(--radius);
+  padding: 26px 24px;
+  box-shadow: var(--shadow-sm);
+}
+
+.pay__title {
+  font-size: 1.15rem;
+  font-weight: 800;
+  margin-bottom: 6px;
+}
+
+.pay__hint {
+  color: var(--muted);
+  font-size: 0.9rem;
+  line-height: 1.6;
+  margin-bottom: 18px;
+}
+
+.pay__error {
+  background: #fdecec;
+  color: #a12525;
+  border-radius: var(--radius-sm);
+  padding: 11px 14px;
+  margin-bottom: 16px;
+  font-weight: 600;
+  font-size: 0.92rem;
+}
+
+.pay__cards {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.pay__card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border: 1.5px solid rgba(18, 33, 46, 0.14);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.pay__card:hover {
+  background: var(--brand-blue-soft);
+}
+
+.pay__card:has(input:checked) {
+  border-color: var(--brand-blue);
+  background: var(--brand-blue-soft);
+}
+
+.pay__card input {
+  accent-color: var(--brand-blue-dark);
+  width: 18px;
+  height: 18px;
+}
+
+.pay__card span {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.pay__card small {
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.pay__submit {
+  width: 100%;
+}
+
+.pay__submit:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ---------- paid state ---------- */
+.pay--done {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: #e0f6e6;
+  border-color: #b5e3c2;
+}
+
+.pay--done div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.pay--done small {
+  color: #2b6b42;
+  font-size: 0.85rem;
+  word-break: break-all;
+}
+
+.pay__check {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #1c6b34;
+  color: var(--white);
+  font-size: 1.2rem;
+  font-weight: 800;
+  flex-shrink: 0;
+}

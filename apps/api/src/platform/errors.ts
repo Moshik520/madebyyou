@@ -41,3 +41,9 @@ export class ConflictError extends AppError {
     super(409, 'CONFLICT', message);
   }
 }
+
+export class PaymentRequiredError extends AppError {
+  constructor(message = 'Payment failed') {
+    super(402, 'PAYMENT_FAILED', message);
+  }
+}

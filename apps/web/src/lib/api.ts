@@ -186,3 +186,13 @@ export function fetchOrders(): Promise<{ orders: Order[] }> {
 export function fetchOrder(orderId: string): Promise<{ order: Order }> {
   return request(`/orders/${orderId}`);
 }
+
+export function payOrder(
+  orderId: string,
+  cardToken: string,
+): Promise<{ order: Order }> {
+  return request(`/orders/${orderId}/pay`, {
+    method: 'POST',
+    body: JSON.stringify({ cardToken }),
+  });
+}

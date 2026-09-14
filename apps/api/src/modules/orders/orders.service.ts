@@ -1,6 +1,8 @@
 import { Decimal } from 'decimal.js';
 import { prisma } from '../../platform/prisma.js';
-import { BadRequestError, NotFoundError } from '../../platform/errors.js';
+import { BadRequestError, NotFoundError, PaymentRequiredError } from '../../platform/errors.js';
+import { logger } from '../../platform/logger.js';
+import { paymentProvider } from '../../providers/payment/index.js';
 
 const orderSelect = {
   id: true,
@@ -155,4 +157,61 @@ export async function getOrder(userId: string, orderId: string) {
   }
 
   return toOrderDto(order);
+}
+
+export async function payOrder(
+  userId: string,
+  orderId: string,
+  cardToken: string,
+) {
+  const order = await prisma.order.findFirst({
+    where: { id: orderId, userId },
+    select: { id: true, status: true, total: true, currency: true },
+  });
+
+  if (!order) {
+    throw new NotFoundError('Order not found');
+  }
+
+  // Idempotent: paying an already-paid order is a no-op, not an error.
+  if (order.status === 'PAID') {
+    return getOrder(userId, orderId);
+  }
+
+  if (order.status !== 'PENDING' && order.status !== 'FAILED') {
+    throw new BadRequestError(
+      `Order cannot be paid while it is ${order.status}`,
+    );
+  }
+
+  const result = await paymentProvider.charge({
+    orderId: order.id,
+    amount: order.total.toFixed(2),
+    currency: order.currency,
+    cardToken,
+  });
+
+  await prisma.order.update({
+    where: { id: order.id },
+    data: {
+      status: result.status === 'succeeded' ? 'PAID' : 'FAILED',
+      paymentRef: result.reference,
+    },
+  });
+
+  logger.info(
+    {
+      orderId: order.id,
+      provider: paymentProvider.name,
+      reference: result.reference,
+      result: result.status,
+    },
+    'payment attempt',
+  );
+
+  if (result.status === 'failed') {
+    throw new PaymentRequiredError(result.failureReason);
+  }
+
+  return getOrder(userId, orderId);
 }

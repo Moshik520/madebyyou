@@ -25,6 +25,8 @@ model User {
   designProjects DesignProject[]
   cart           Cart?
   orders         Order[]
+  assets         Asset[]
+
 
 
   @@map("users")
@@ -60,21 +62,27 @@ enum DesignProjectStatus {
 }
 
 model DesignProject {
-  id        String              @id @default(uuid())
-  userId    String
-  productId String
-  title     String
-  status    DesignProjectStatus @default(DRAFT)
-  createdAt DateTime            @default(now())
-  updatedAt DateTime            @updatedAt
+  id               String              @id @default(uuid())
+  userId           String
+  productId        String
+  title            String
+  status           DesignProjectStatus @default(DRAFT)
+  brief            Json?
+  currentVersionId String?             @unique
+  createdAt        DateTime            @default(now())
+  updatedAt        DateTime            @updatedAt
 
-  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  product Product @relation(fields: [productId], references: [id], onDelete: Restrict)
+  user           User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product        Product         @relation(fields: [productId], references: [id], onDelete: Restrict)
+  conversation   Conversation?
+  versions       DesignVersion[] @relation("ProjectVersions")
+  currentVersion DesignVersion?  @relation("CurrentVersion", fields: [currentVersionId], references: [id], onDelete: SetNull)
 
   @@index([userId])
   @@index([productId])
   @@map("design_projects")
 }
+
 
 model Cart {
   id        String   @id @default(uuid())
@@ -151,4 +159,88 @@ model OrderItem {
 
   @@index([orderId])
   @@map("order_items")
+}
+
+
+enum AssetKind {
+  UPLOAD
+  ARTWORK
+  MOCKUP
+}
+
+model Asset {
+  id         String    @id @default(uuid())
+  userId     String
+  kind       AssetKind
+  mimeType   String
+  width      Int
+  height     Int
+  bytes      Int
+  storageKey String    @unique
+  createdAt  DateTime  @default(now())
+
+  user      User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  artworkOf DesignVersion[] @relation("VersionArtwork")
+  mockupOf  DesignVersion[] @relation("VersionMockup")
+
+  @@index([userId])
+  @@map("assets")
+}
+
+model Conversation {
+  id        String   @id @default(uuid())
+  projectId String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  project  DesignProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  messages Message[]
+
+  @@map("conversations")
+}
+
+enum MessageRole {
+  USER
+  ASSISTANT
+}
+
+model Message {
+  id              String      @id @default(uuid())
+  conversationId  String
+  role            MessageRole
+  content         String
+  designVersionId String?
+  createdAt       DateTime    @default(now())
+
+  conversation  Conversation   @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  designVersion DesignVersion? @relation(fields: [designVersionId], references: [id], onDelete: SetNull)
+
+  @@index([conversationId])
+  @@map("messages")
+}
+
+model DesignVersion {
+  id                   String   @id @default(uuid())
+  projectId            String
+  versionNumber        Int
+  brief                Json
+  imagePrompt          String?
+  artworkAssetId       String?
+  mockupAssetId        String?
+  provider             String
+  derivedFromVersionId String?
+  createdAt            DateTime @default(now())
+
+  project   DesignProject  @relation("ProjectVersions", fields: [projectId], references: [id], onDelete: Cascade)
+  artwork   Asset?         @relation("VersionArtwork", fields: [artworkAssetId], references: [id], onDelete: SetNull)
+  mockup    Asset?         @relation("VersionMockup", fields: [mockupAssetId], references: [id], onDelete: SetNull)
+  messages  Message[]
+  currentOf DesignProject? @relation("CurrentVersion")
+
+  derivedFrom DesignVersion?  @relation("DerivedDesigns", fields: [derivedFromVersionId], references: [id], onDelete: SetNull)
+  derivatives DesignVersion[] @relation("DerivedDesigns")
+
+  @@unique([projectId, versionNumber])
+  @@index([projectId])
+  @@map("design_versions")
 }

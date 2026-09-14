@@ -116,9 +116,12 @@ export function ProductPage() {
               >
                 {busy ? 'מוסיף…' : 'הוספה לעגלה'}
               </button>
-              <button className="btn btn--ghost" type="button" disabled>
+              <Link
+                className="btn btn--ghost"
+                to={`/products/${product.slug}/design`}
+              >
                 התחילו לעצב
-              </button>
+              </Link>
             </div>
 
             <p className="product-page__note">
