@@ -10,6 +10,15 @@ const products = [
     printArea: { x: 338, y: 510, width: 340, height: 420, shape: 'rect' },
   },
   {
+    slug: 'steel-bottle',
+    name: 'Steel Bottle 500ml',
+    description:
+      'Matte black insulated stainless steel bottle. Keeps drinks cold for 24 hours.',
+    basePrice: '39.00',
+    imageUrl: '/assets/products/steel-bottle.png',
+    printArea: { x: 500, y: 670, width: 150, height: 250, shape: 'wrap' },
+  },
+  {
     slug: 'premium-hoodie',
     name: 'Premium Hoodie',
     description: 'Heavyweight fleece hoodie with kangaroo pocket and lined hood.',
