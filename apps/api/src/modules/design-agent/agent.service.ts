@@ -7,6 +7,13 @@ import {
   emptyBrief,
   type DesignBrief,
 } from '../../providers/llm/types.js';
+import { AppError } from '../../platform/errors.js';
+import { logger } from '../../platform/logger.js';
+import {
+  createDesignVersion,
+  toVersionDto,
+  versionSelect,
+} from './design-pipeline.js';
 
 const HISTORY_LIMIT = 30;
 
@@ -30,10 +37,15 @@ export async function getConversation(userId: string, projectId: string) {
     where: { id: projectId, userId },
     select: {
       brief: true,
+      currentVersionId: true,
       conversation: {
         select: {
           messages: { select: messageSelect, orderBy: { createdAt: 'asc' } },
         },
+      },
+      versions: {
+        select: versionSelect,
+        orderBy: { versionNumber: 'asc' },
       },
     },
   });
@@ -44,9 +56,12 @@ export async function getConversation(userId: string, projectId: string) {
 
   return {
     brief: parseBrief(project.brief),
+    currentVersionId: project.currentVersionId,
     messages: project.conversation?.messages ?? [],
+    versions: project.versions.map(toVersionDto),
   };
 }
+
 
 export async function sendMessage(
   userId: string,
@@ -89,6 +104,31 @@ export async function sendMessage(
     userMessage: content,
   });
 
+  // The agent declared intent; the server carries it out.
+  let version: Awaited<ReturnType<typeof createDesignVersion>> | null = null;
+  let replyText = turn.reply;
+
+  if (turn.status === 'READY') {
+    try {
+      version = await createDesignVersion({
+        userId,
+        projectId: project.id,
+        brief: turn.brief,
+      });
+    } catch (error) {
+      logger.warn(
+        { err: error, projectId: project.id },
+        'design generation failed',
+      );
+
+      // A failed generation must not break the conversation.
+      replyText =
+        error instanceof AppError
+          ? `${turn.reply}\n\n(${error.message})`
+          : `${turn.reply}\n\n(משהו השתבש בייצור העיצוב. אפשר לנסות שוב.)`;
+    }
+  }
+
   const [userMessage, assistantMessage] = await prisma.$transaction([
     prisma.message.create({
       data: { conversationId: conversation.id, role: 'USER', content },
@@ -98,7 +138,8 @@ export async function sendMessage(
       data: {
         conversationId: conversation.id,
         role: 'ASSISTANT',
-        content: turn.reply,
+        content: replyText,
+        designVersionId: version?.id ?? null,
       },
       select: messageSelect,
     }),
@@ -108,5 +149,6 @@ export async function sendMessage(
     }),
   ]);
 
-  return { turn, messages: [userMessage, assistantMessage] };
+  return { turn, messages: [userMessage, assistantMessage], version };
 }
+
