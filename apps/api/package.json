@@ -22,6 +22,7 @@
     "jose": "^6.2.11",
     "pino": "^10.3.1",
     "pino-http": "^11.0.0",
+    "sharp": "^0.35.4",
     "zod": "^4.4.3"
   },
   "devDependencies": {
@@ -36,6 +37,7 @@
   "allowScripts": {
     "@prisma/engines@7.9.1": true,
     "esbuild@0.28.2": true,
-    "prisma@7.9.1": true
+    "prisma@7.9.1": true,
+    "sharp@0.35.4": true
   }
 }
