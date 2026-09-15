@@ -7,6 +7,8 @@ const envSchema = z.object({
   JWT_SECRET: z.string().min(32, 'JWT_SECRET must be at least 32 characters'),
   JWT_EXPIRES_IN: z.string().default('7d'),
   PAYMENT_PROVIDER: z.enum(['mock']).default('mock'),
+  LLM_PROVIDER: z.enum(['agent-sdk']).default('agent-sdk'),
+
 
 });
 

@@ -9,6 +9,8 @@ import { productsRouter } from './modules/products/products.routes.js';
 import { designProjectsRouter } from './modules/design-projects/design-projects.routes.js';
 import { cartRouter } from './modules/cart/cart.routes.js';
 import { ordersRouter } from './modules/orders/orders.routes.js';
+import { designAgentRouter } from './modules/design-agent/agent.routes.js';
+
 
 
 
@@ -50,6 +52,7 @@ export function createApp(): Express {
   app.use('/api/auth', authRouter);
   app.use('/api/products', productsRouter); 
   app.use('/api/design-projects', designProjectsRouter);
+  app.use('/api/design-projects', designAgentRouter);
   app.use('/api/cart', cartRouter);
   app.use('/api/orders', ordersRouter);
 

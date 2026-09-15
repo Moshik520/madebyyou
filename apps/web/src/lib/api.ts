@@ -196,3 +196,81 @@ export function payOrder(
     body: JSON.stringify({ cardToken }),
   });
 }
+
+/* ---------- Design agent ---------- */
+
+export type ArtworkSource = 'GENERATE' | 'UPLOAD' | 'UPLOAD_TRANSFORM';
+
+export type TextOverlay = {
+  content: string | null;
+  placement: 'ABOVE' | 'BELOW' | 'CENTER';
+  color: string | null;
+};
+
+export type DesignBrief = {
+  artworkSource: ArtworkSource | null;
+  subject: string | null;
+  style: string | null;
+  colorPalette: string[];
+  mood: string | null;
+  negative: string | null;
+  textOverlay: TextOverlay | null;
+};
+
+export type AgentTurn = {
+  reply: string;
+  brief: DesignBrief;
+  status: 'NEEDS_INPUT' | 'READY';
+  quickReplies: string[];
+  needsUpload: boolean;
+  capability: 'NONE' | 'TEXT_TO_IMAGE' | 'IMAGE_TO_IMAGE';
+};
+
+export type ChatMessage = {
+  id: string;
+  role: 'USER' | 'ASSISTANT';
+  content: string;
+  designVersionId: string | null;
+  createdAt: string;
+};
+
+export type DesignProject = {
+  id: string;
+  title: string;
+  status: string;
+  createdAt: string;
+  updatedAt: string;
+  product: { id: string; slug: string; name: string; imageUrl: string };
+};
+
+export function createDesignProject(
+  productId: string,
+  title?: string,
+): Promise<{ project: DesignProject }> {
+  return request('/design-projects', {
+    method: 'POST',
+    body: JSON.stringify(title ? { productId, title } : { productId }),
+  });
+}
+
+export function fetchDesignProject(
+  projectId: string,
+): Promise<{ project: DesignProject }> {
+  return request(`/design-projects/${projectId}`);
+}
+
+export function fetchConversation(
+  projectId: string,
+): Promise<{ brief: DesignBrief; messages: ChatMessage[] }> {
+  return request(`/design-projects/${projectId}/conversation`);
+}
+
+export function sendAgentMessage(
+  projectId: string,
+  content: string,
+): Promise<{ turn: AgentTurn; messages: ChatMessage[] }> {
+  return request(`/design-projects/${projectId}/messages`, {
+    method: 'POST',
+    body: JSON.stringify({ content }),
+  });
+}
