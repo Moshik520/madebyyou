@@ -264,3 +264,32 @@
   color: var(--brand-blue-dark);
   font-weight: 700;
 }
+
+.bubble__design figcaption {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.bubble__cart {
+  padding: 7px 15px;
+  border: none;
+  border-radius: 999px;
+  background: var(--brand-yellow);
+  color: var(--ink);
+  font-weight: 700;
+  font-size: 0.82rem;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.bubble__cart:hover:not(:disabled) {
+  background: var(--brand-yellow-dark);
+}
+
+.bubble__cart:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}

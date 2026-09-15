@@ -3,6 +3,7 @@ import { prisma } from '../../platform/prisma.js';
 import { BadRequestError, NotFoundError, PaymentRequiredError } from '../../platform/errors.js';
 import { logger } from '../../platform/logger.js';
 import { paymentProvider } from '../../providers/payment/index.js';
+import { localStorageProvider } from '../../providers/storage/local.provider.js';
 
 const orderSelect = {
   id: true,
@@ -80,6 +81,12 @@ export async function createOrderFromCart(userId: string) {
               isActive: true,
             },
           },
+          designVersion: {
+            select: {
+              versionNumber: true,
+              mockup: { select: { storageKey: true } },
+            },
+          },
         },
       },
     },
@@ -105,12 +112,21 @@ export async function createOrderFromCart(userId: string) {
 
     subtotal = subtotal.add(lineTotal);
 
+    const design = item.designVersion;
+
     return {
       productId: item.product.id,
       designVersionId: item.designVersionId,
-      productName: item.product.name,
+      // The mockup is what the customer actually bought — snapshot that,
+      // falling back to the catalogue photo for a plain product.
+      productName: design
+        ? `${item.product.name} — עיצוב ${design.versionNumber}`
+        : item.product.name,
       productSlug: item.product.slug,
-      imageUrl: item.product.imageUrl,
+      imageUrl:
+        design?.mockup
+          ? localStorageProvider.publicUrl(design.mockup.storageKey)
+          : item.product.imageUrl,
       unitPrice: unitPrice.toFixed(2),
       quantity: item.quantity,
       lineTotal: lineTotal.toFixed(2),

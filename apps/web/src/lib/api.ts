@@ -112,6 +112,11 @@ export type CartItem = {
     name: string;
     imageUrl: string;
   };
+  design: {
+    id: string;
+    versionNumber: number;
+    mockupUrl: string | null;
+  } | null;
 };
 
 export type Cart = {
@@ -128,10 +133,15 @@ export function fetchCart(): Promise<{ cart: Cart }> {
 export function addToCart(
   productId: string,
   quantity = 1,
+  designVersionId?: string,
 ): Promise<{ cart: Cart }> {
   return request('/cart/items', {
     method: 'POST',
-    body: JSON.stringify({ productId, quantity }),
+    body: JSON.stringify(
+      designVersionId
+        ? { productId, quantity, designVersionId }
+        : { productId, quantity },
+    ),
   });
 }
 

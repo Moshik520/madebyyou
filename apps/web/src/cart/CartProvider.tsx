@@ -58,8 +58,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
       cart,
       busy,
       error,
-      addItem: (productId, quantity = 1) =>
-        run(() => addToCart(productId, quantity)),
+      addItem: (productId, quantity = 1, designVersionId) =>
+        run(() => addToCart(productId, quantity, designVersionId)),
       setQuantity: (itemId, quantity) =>
         run(() => updateCartItem(itemId, quantity)),
       removeItem: (itemId) => run(() => removeCartItem(itemId)),

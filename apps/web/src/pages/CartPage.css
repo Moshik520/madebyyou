@@ -225,3 +225,21 @@
     text-align: end;
   }
 }
+
+.cart-row__info {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.cart-row__design {
+  display: inline-block;
+  width: fit-content;
+  margin-top: 3px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: #f3e8ff;
+  color: #6b21a8;
+  font-size: 0.78rem;
+  font-weight: 700;
+}

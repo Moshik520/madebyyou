@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react';
-import { Link, Navigate, useParams } from 'react-router-dom';
+import { Link, Navigate, useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../auth/useAuth';
+import { useCart } from '../cart/useCart';
 import { BriefCard } from '../components/BriefCard';
 import {
   fetchConversation,
@@ -30,6 +31,8 @@ const OPENING_LINE =
 export function DesignerPage() {
   const { projectId } = useParams<{ projectId: string }>();
   const { user, loading } = useAuth();
+  const { addItem, busy: cartBusy } = useCart();
+  const navigate = useNavigate();
 
   const [project, setProject] = useState<DesignProject | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -111,6 +114,17 @@ export function DesignerPage() {
       setError(err instanceof Error ? err.message : 'השליחה נכשלה');
     } finally {
       setSending(false);
+    }
+  }
+
+  async function handleAddToCart(version: DesignVersion) {
+    if (!project) return;
+
+    try {
+      await addItem(project.product.slug, 1, version.id);
+      navigate('/cart');
+    } catch {
+      /* the cart provider already surfaced the error */
     }
   }
 
@@ -198,19 +212,30 @@ export function DesignerPage() {
                           loading="lazy"
                         />
                         <figcaption>
-                          גרסה {version.versionNumber}
-                          {version.artworkUrl && (
-                            <>
-                              {' · '}
-                              <a
-                                href={version.artworkUrl}
-                                target="_blank"
-                                rel="noreferrer"
-                              >
-                                הורדת קובץ ההדפסה
-                              </a>
-                            </>
-                          )}
+                          <span>
+                            גרסה {version.versionNumber}
+                            {version.artworkUrl && (
+                              <>
+                                {' · '}
+                                <a
+                                  href={version.artworkUrl}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                >
+                                  קובץ ההדפסה
+                                </a>
+                              </>
+                            )}
+                          </span>
+
+                          <button
+                            className="bubble__cart"
+                            type="button"
+                            disabled={cartBusy}
+                            onClick={() => void handleAddToCart(version)}
+                          >
+                            {cartBusy ? 'מוסיף…' : 'הוספה לעגלה'}
+                          </button>
                         </figcaption>
                       </figure>
                     )}

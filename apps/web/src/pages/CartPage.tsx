@@ -76,7 +76,10 @@ export function CartPage() {
                     className="cart-row__media"
                     to={`/products/${item.product.slug}`}
                   >
-                    <img src={item.product.imageUrl} alt={item.product.name} />
+                    <img
+                      src={item.design?.mockupUrl ?? item.product.imageUrl}
+                      alt={item.product.name}
+                    />
                   </Link>
 
                   <div className="cart-row__info">
@@ -88,6 +91,11 @@ export function CartPage() {
                     <span className="cart-row__unit">
                       {formatPrice(item.unitPrice)} ליחידה
                     </span>
+                    {item.design && (
+                      <span className="cart-row__design">
+                        ✦ עיצוב אישי · גרסה {item.design.versionNumber}
+                      </span>
+                    )}
                   </div>
 
                   <div className="cart-row__qty">

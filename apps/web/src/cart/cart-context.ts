@@ -6,7 +6,11 @@ export type CartState = {
   /** true while any cart request is in flight */
   busy: boolean;
   error: string | null;
-  addItem: (productId: string, quantity?: number) => Promise<void>;
+  addItem: (
+    productId: string,
+    quantity?: number,
+    designVersionId?: string,
+  ) => Promise<void>;
   setQuantity: (itemId: string, quantity: number) => Promise<void>;
   removeItem: (itemId: string) => Promise<void>;
   refresh: () => Promise<void>;

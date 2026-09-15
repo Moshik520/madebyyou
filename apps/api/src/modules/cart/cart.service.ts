@@ -1,6 +1,7 @@
 import { Decimal } from 'decimal.js';
 import { prisma } from '../../platform/prisma.js';
-import { NotFoundError } from '../../platform/errors.js';
+import { BadRequestError, NotFoundError } from '../../platform/errors.js';
+import { localStorageProvider } from '../../providers/storage/local.provider.js';
 import type { AddCartItemInput } from './cart.schema.js';
 
 const cartItemSelect = {
@@ -15,6 +16,13 @@ const cartItemSelect = {
       basePrice: true,
     },
   },
+  designVersion: {
+    select: {
+      id: true,
+      versionNumber: true,
+      mockup: { select: { storageKey: true } },
+    },
+  },
 } as const;
 
 type CartItemRow = {
@@ -27,7 +35,21 @@ type CartItemRow = {
     imageUrl: string;
     basePrice: { toString(): string };
   };
+  designVersion: {
+    id: string;
+    versionNumber: number;
+    mockup: { storageKey: string } | null;
+  } | null;
 };
+
+/**
+ * One line per (product, design) pair. A unique index over a nullable column
+ * would not work here: Postgres treats every NULL as distinct, so two
+ * plain-product lines could both be inserted.
+ */
+function buildLineKey(productId: string, designVersionId: string | null): string {
+  return `${productId}:${designVersionId ?? 'none'}`;
+}
 
 function buildCartResponse(cartId: string, items: CartItemRow[]) {
   let subtotal = new Decimal(0);
@@ -37,6 +59,8 @@ function buildCartResponse(cartId: string, items: CartItemRow[]) {
     const lineTotal = unitPrice.mul(item.quantity);
 
     subtotal = subtotal.add(lineTotal);
+
+    const design = item.designVersion;
 
     return {
       id: item.id,
@@ -49,6 +73,15 @@ function buildCartResponse(cartId: string, items: CartItemRow[]) {
         name: item.product.name,
         imageUrl: item.product.imageUrl,
       },
+      design: design
+        ? {
+            id: design.id,
+            versionNumber: design.versionNumber,
+            mockupUrl: design.mockup
+              ? localStorageProvider.publicUrl(design.mockup.storageKey)
+              : null,
+          }
+        : null,
     };
   });
 
@@ -94,16 +127,42 @@ export async function addCartItem(userId: string, input: AddCartItemInput) {
     throw new NotFoundError('Product not found');
   }
 
+  // A design may only be added by the user who owns the project it belongs to,
+  // and only onto the product it was designed for.
+  if (input.designVersionId) {
+    const version = await prisma.designVersion.findFirst({
+      where: {
+        id: input.designVersionId,
+        project: { userId },
+      },
+      select: { id: true, project: { select: { productId: true } } },
+    });
+
+    if (!version) {
+      throw new NotFoundError('Design not found');
+    }
+
+    if (version.project.productId !== product.id) {
+      throw new BadRequestError('This design belongs to a different product');
+    }
+  }
+
   const cart = await getOrCreateCart(userId);
+  const designVersionId = input.designVersionId ?? null;
 
   await prisma.cartItem.upsert({
     where: {
-      cartId_productId: { cartId: cart.id, productId: product.id },
+      cartId_lineKey: {
+        cartId: cart.id,
+        lineKey: buildLineKey(product.id, designVersionId),
+      },
     },
     update: { quantity: { increment: input.quantity } },
     create: {
       cartId: cart.id,
       productId: product.id,
+      designVersionId,
+      lineKey: buildLineKey(product.id, designVersionId),
       quantity: input.quantity,
     },
   });

@@ -101,14 +101,19 @@ model CartItem {
   cartId          String
   productId       String
   designVersionId String?
+  /// productId + designVersionId. The same product with two different designs
+  /// becomes two lines, and a missing design id still collapses correctly —
+  /// which a unique index over a nullable column cannot do in Postgres.
+  lineKey         String
   quantity        Int      @default(1)
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
-  cart    Cart    @relation(fields: [cartId], references: [id], onDelete: Cascade)
-  product Product @relation(fields: [productId], references: [id], onDelete: Restrict)
+  cart          Cart           @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  product       Product        @relation(fields: [productId], references: [id], onDelete: Restrict)
+  designVersion DesignVersion? @relation(fields: [designVersionId], references: [id], onDelete: SetNull)
 
-  @@unique([cartId, productId])
+  @@unique([cartId, lineKey])
   @@index([cartId])
   @@map("cart_items")
 }
@@ -235,6 +240,7 @@ model DesignVersion {
   artwork   Asset?         @relation("VersionArtwork", fields: [artworkAssetId], references: [id], onDelete: SetNull)
   mockup    Asset?         @relation("VersionMockup", fields: [mockupAssetId], references: [id], onDelete: SetNull)
   messages  Message[]
+  cartItems CartItem[]
   currentOf DesignProject? @relation("CurrentVersion")
 
   derivedFrom DesignVersion?  @relation("DerivedDesigns", fields: [derivedFromVersionId], references: [id], onDelete: SetNull)
