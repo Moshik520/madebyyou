@@ -1,13 +1,13 @@
 import { prisma } from '../src/platform/prisma.js';
 
 const products = [
-  {
+    {
     slug: 'classic-tee',
     name: 'Classic T-Shirt',
     description: '100% combed cotton, unisex fit. Soft, durable, everyday wear.',
     basePrice: '24.90',
-    imageUrl: 'https://placehold.co/800x800/1f2937/ffffff?text=T-Shirt',
-    printArea: { x: 250, y: 220, width: 300, height: 380, shape: 'rect' },
+    imageUrl: '/assets/products/classic-tee.png',
+    printArea: { x: 338, y: 510, width: 340, height: 420, shape: 'rect' },
   },
   {
     slug: 'premium-hoodie',

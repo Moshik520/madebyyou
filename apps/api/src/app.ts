@@ -11,6 +11,7 @@ import { cartRouter } from './modules/cart/cart.routes.js';
 import { ordersRouter } from './modules/orders/orders.routes.js';
 import { designAgentRouter } from './modules/design-agent/agent.routes.js';
 import { STORAGE_ROOT } from './providers/storage/local.provider.js';
+import { ASSETS_ROOT } from './platform/assets.js';
 
 
 
@@ -34,6 +35,7 @@ export function createApp(): Express {
 
   app.use(express.json());
   app.use('/static', express.static(STORAGE_ROOT, { index: false }));
+  app.use('/assets', express.static(ASSETS_ROOT, { index: false }));
 
   app.get('/health', (_req: Request, res: Response) => {
     res.json({

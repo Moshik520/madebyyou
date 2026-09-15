@@ -10,6 +10,7 @@ import {
   type ChatMessage,
   type DesignBrief,
   type DesignProject,
+  type DesignVersion,
 } from '../lib/api';
 import './DesignerPage.css';
 
@@ -34,6 +35,7 @@ export function DesignerPage() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [brief, setBrief] = useState<DesignBrief>(emptyBrief);
   const [turn, setTurn] = useState<AgentTurn | null>(null);
+  const [versions, setVersions] = useState<DesignVersion[]>([]);
 
   const [draft, setDraft] = useState('');
   const [sending, setSending] = useState(false);
@@ -52,6 +54,7 @@ export function DesignerPage() {
         setProject(p.project);
         setMessages(c.messages);
         setBrief(c.brief);
+        setVersions(c.versions);
       })
       .catch((err: unknown) => {
         if (!cancelled) {
@@ -98,6 +101,10 @@ export function DesignerPage() {
       ]);
       setBrief(data.turn.brief);
       setTurn(data.turn);
+
+      if (data.version) {
+        setVersions((prev) => [...prev, data.version!]);
+      }
     } catch (err: unknown) {
       setMessages((prev) => prev.filter((m) => m.id !== optimistic.id));
       setDraft(text);
@@ -167,18 +174,49 @@ export function DesignerPage() {
             <div className="chat__messages">
               <div className="bubble bubble--agent">{OPENING_LINE}</div>
 
-              {messages.map((message) => (
-                <div
-                  className={
-                    message.role === 'USER'
-                      ? 'bubble bubble--user'
-                      : 'bubble bubble--agent'
-                  }
-                  key={message.id}
-                >
-                  {message.content}
-                </div>
-              ))}
+              {messages.map((message) => {
+                const version = message.designVersionId
+                  ? versions.find((v) => v.id === message.designVersionId)
+                  : undefined;
+
+                return (
+                  <div
+                    className={
+                      message.role === 'USER'
+                        ? 'bubble bubble--user'
+                        : 'bubble bubble--agent'
+                    }
+                    key={message.id}
+                  >
+                    {message.content}
+
+                    {version?.mockupUrl && (
+                      <figure className="bubble__design">
+                        <img
+                          src={version.mockupUrl}
+                          alt={`גרסה ${version.versionNumber}`}
+                          loading="lazy"
+                        />
+                        <figcaption>
+                          גרסה {version.versionNumber}
+                          {version.artworkUrl && (
+                            <>
+                              {' · '}
+                              <a
+                                href={version.artworkUrl}
+                                target="_blank"
+                                rel="noreferrer"
+                              >
+                                הורדת קובץ ההדפסה
+                              </a>
+                            </>
+                          )}
+                        </figcaption>
+                      </figure>
+                    )}
+                  </div>
+                );
+              })}
 
               {sending && (
                 <div className="bubble bubble--agent bubble--typing">

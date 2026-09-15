@@ -235,3 +235,32 @@
     min-height: 60vh;
   }
 }
+
+/* ---------- generated design inside a bubble ---------- */
+.bubble__design {
+  margin: 12px 0 0;
+  background: var(--white);
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+
+.bubble__design img {
+  display: block;
+  width: 100%;
+  max-width: 320px;
+  background: var(--brand-blue-soft);
+}
+
+.bubble__design figcaption {
+  padding: 9px 12px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--muted);
+  border-top: 1px solid rgba(18, 33, 46, 0.08);
+}
+
+.bubble__design a {
+  color: var(--brand-blue-dark);
+  font-weight: 700;
+}

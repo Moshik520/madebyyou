@@ -259,16 +259,33 @@ export function fetchDesignProject(
   return request(`/design-projects/${projectId}`);
 }
 
-export function fetchConversation(
-  projectId: string,
-): Promise<{ brief: DesignBrief; messages: ChatMessage[] }> {
+export type DesignVersion = {
+  id: string;
+  versionNumber: number;
+  imagePrompt: string | null;
+  provider: string;
+  createdAt: string;
+  artworkUrl: string | null;
+  mockupUrl: string | null;
+};
+
+export function fetchConversation(projectId: string): Promise<{
+  brief: DesignBrief;
+  currentVersionId: string | null;
+  messages: ChatMessage[];
+  versions: DesignVersion[];
+}> {
   return request(`/design-projects/${projectId}/conversation`);
 }
 
 export function sendAgentMessage(
   projectId: string,
   content: string,
-): Promise<{ turn: AgentTurn; messages: ChatMessage[] }> {
+): Promise<{
+  turn: AgentTurn;
+  messages: ChatMessage[];
+  version: DesignVersion | null;
+}> {
   return request(`/design-projects/${projectId}/messages`, {
     method: 'POST',
     body: JSON.stringify({ content }),

@@ -5,13 +5,23 @@ import { defineConfig } from 'vite'
 export default defineConfig({
   plugins: [react()],
   server: {
-    proxy: {
-      // Anything the browser requests under /api is forwarded to the
-      // Express server on port 3000. Same-origin in the browser -> no CORS.
+        proxy: {
       '/api': {
         target: 'http://localhost:3000',
         changeOrigin: true,
       },
+      // Images the API serves from disk. Same-origin in the browser, so the
+      // relative URLs the API returns work unchanged in dev and in production.
+      '/static': {
+        target: 'http://localhost:3000',
+        changeOrigin: true,
+      },
+        '/assets': {
+        target: 'http://localhost:3000',
+        changeOrigin: true,
+      },
+
     },
+
   },
 })

@@ -7,6 +7,9 @@ import { imageGenProvider } from '../../providers/image/index.js';
 import { buildImagePrompt } from '../../providers/image/prompt-builder.js';
 import { localStorageProvider } from '../../providers/storage/local.provider.js';
 import type { DesignBrief } from '../../providers/llm/types.js';
+import { readFile } from 'node:fs/promises';
+import { resolve } from 'node:path';
+import { ASSETS_ROOT, ASSETS_URL_PREFIX } from '../../platform/assets.js';
 
 const ARTWORK_SIZE = 1024;
 
@@ -61,8 +64,19 @@ function assertGeneratable(brief: DesignBrief): void {
   }
 }
 
-async function fetchProductImage(url: string): Promise<Buffer> {
-  const response = await fetch(url);
+async function loadProductImage(imageUrl: string): Promise<Buffer> {
+  // Our own product photos live on disk — no network round-trip needed.
+  if (imageUrl.startsWith(ASSETS_URL_PREFIX)) {
+    const file = resolve(ASSETS_ROOT, imageUrl.slice(ASSETS_URL_PREFIX.length));
+
+    if (!file.startsWith(ASSETS_ROOT)) {
+      throw new Error(`Refusing to read outside the assets root: ${imageUrl}`);
+    }
+
+    return readFile(file);
+  }
+
+  const response = await fetch(imageUrl);
 
   if (!response.ok) {
     throw new Error(`Product image fetch failed with ${response.status}`);
@@ -70,6 +84,7 @@ async function fetchProductImage(url: string): Promise<Buffer> {
 
   return Buffer.from(await response.arrayBuffer());
 }
+
 
 export async function createDesignVersion(input: {
   userId: string;
@@ -98,7 +113,8 @@ export async function createDesignVersion(input: {
     height: ARTWORK_SIZE,
   });
 
-  const productImage = await fetchProductImage(project.product.imageUrl);
+    const productImage = await loadProductImage(project.product.imageUrl);
+
 
   const mockup = await renderMockup({
     productImage,
