@@ -32,11 +32,12 @@ const products = [
   {
     slug: 'ceramic-mug',
     name: 'Ceramic Mug 11oz',
-    description: 'Dishwasher-safe ceramic mug with a glossy finish.',
+    description:
+      'Matte black ceramic mug, 11oz. Dishwasher and microwave safe.',
     basePrice: '14.50',
-    imageUrl: 'https://placehold.co/800x800/7c2d12/ffffff?text=Mug',
-    printArea: { x: 180, y: 240, width: 440, height: 300, shape: 'wrap' },
-    isActive: false,
+    imageUrl: '/assets/products/ceramic-mug.png',
+    printArea: { x: 392, y: 610, width: 270, height: 230, shape: 'wrap' },
+    isActive: true,
   },
   {
     slug: 'art-poster-a2',
