@@ -1,12 +1,15 @@
-import { useEffect, useRef, useState, type FormEvent } from 'react';
+import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 import { Link, Navigate, useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../auth/useAuth';
 import { useCart } from '../cart/useCart';
 import { BriefCard } from '../components/BriefCard';
+import { PlacementEditor } from '../components/PlacementEditor';
 import {
   fetchConversation,
   fetchDesignProject,
+  placeDesignVersion,
   sendAgentMessage,
+  type Placement,
   type AgentTurn,
   type ChatMessage,
   type DesignBrief,
@@ -25,6 +28,37 @@ const emptyBrief: DesignBrief = {
   textOverlay: null,
 };
 
+/**
+ * Repositioning a design creates a new version derived from the old one rather
+ * than mutating it. A chat bubble should still show the current state, so it
+ * follows the lineage forward to the newest descendant.
+ */
+function buildLatestByAncestor(
+  versions: DesignVersion[],
+): Map<string, DesignVersion> {
+  const childOf = new Map<string, DesignVersion>();
+
+  for (const version of versions) {
+    if (version.derivedFromVersionId) {
+      childOf.set(version.derivedFromVersionId, version);
+    }
+  }
+
+  const latest = new Map<string, DesignVersion>();
+
+  for (const version of versions) {
+    let current = version;
+
+    while (childOf.has(current.id)) {
+      current = childOf.get(current.id)!;
+    }
+
+    latest.set(version.id, current);
+  }
+
+  return latest;
+}
+
 const OPENING_LINE =
   'היי! מה תרצו שיודפס על המוצר? אפשר לתאר רעיון, או להעלות תמונה שיש לכם.';
 
@@ -39,12 +73,19 @@ export function DesignerPage() {
   const [brief, setBrief] = useState<DesignBrief>(emptyBrief);
   const [turn, setTurn] = useState<AgentTurn | null>(null);
   const [versions, setVersions] = useState<DesignVersion[]>([]);
+  const [editing, setEditing] = useState<DesignVersion | null>(null);
+  const [placing, setPlacing] = useState(false);
 
   const [draft, setDraft] = useState('');
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const bottomRef = useRef<HTMLDivElement>(null);
+
+  const latestByAncestor = useMemo(
+    () => buildLatestByAncestor(versions),
+    [versions],
+  );
 
   useEffect(() => {
     if (!projectId || loading || !user) return;
@@ -128,6 +169,27 @@ export function DesignerPage() {
     }
   }
 
+  async function handlePlace(placement: Placement) {
+    if (!projectId || !editing) return;
+
+    setPlacing(true);
+
+    try {
+      await placeDesignVersion(projectId, editing.id, placement);
+
+      // Re-read so every bubble resolves to the newest version in its lineage.
+      const refreshed = await fetchConversation(projectId);
+      setMessages(refreshed.messages);
+      setVersions(refreshed.versions);
+      setBrief(refreshed.brief);
+      setEditing(null);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'לא הצלחנו לשמור את המיקום');
+    } finally {
+      setPlacing(false);
+    }
+  }
+
   function handleSubmit(event: FormEvent) {
     event.preventDefault();
     void send(draft);
@@ -190,7 +252,7 @@ export function DesignerPage() {
 
               {messages.map((message) => {
                 const version = message.designVersionId
-                  ? versions.find((v) => v.id === message.designVersionId)
+                  ? latestByAncestor.get(message.designVersionId)
                   : undefined;
 
                 return (
@@ -228,14 +290,23 @@ export function DesignerPage() {
                             )}
                           </span>
 
-                          <button
-                            className="bubble__cart"
-                            type="button"
-                            disabled={cartBusy}
-                            onClick={() => void handleAddToCart(version)}
-                          >
-                            {cartBusy ? 'מוסיף…' : 'הוספה לעגלה'}
-                          </button>
+                          <span className="bubble__buttons">
+                            <button
+                              className="bubble__place"
+                              type="button"
+                              onClick={() => setEditing(version)}
+                            >
+                              מיקום וגודל
+                            </button>
+                            <button
+                              className="bubble__cart"
+                              type="button"
+                              disabled={cartBusy}
+                              onClick={() => void handleAddToCart(version)}
+                            >
+                              {cartBusy ? 'מוסיף…' : 'הוספה לעגלה'}
+                            </button>
+                          </span>
                         </figcaption>
                       </figure>
                     )}
@@ -301,6 +372,18 @@ export function DesignerPage() {
           <BriefCard brief={brief} />
         </div>
       </div>
+
+      {editing && project && editing.artworkUrl && (
+        <PlacementEditor
+          productImageUrl={project.product.imageUrl}
+          printArea={project.product.printArea}
+          artworkUrl={editing.artworkUrl}
+          initial={editing.placement}
+          busy={placing}
+          onCancel={() => setEditing(null)}
+          onSave={(placement) => void handlePlace(placement)}
+        />
+      )}
     </section>
   );
 }

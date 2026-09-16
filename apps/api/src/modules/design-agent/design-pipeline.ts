@@ -6,7 +6,12 @@ import { prisma } from '../../platform/prisma.js';
 import { imageGenProvider } from '../../providers/image/index.js';
 import { buildImagePrompt } from '../../providers/image/prompt-builder.js';
 import { localStorageProvider } from '../../providers/storage/local.provider.js';
-import type { DesignBrief } from '../../providers/llm/types.js';
+import {
+  defaultPlacement,
+  placementSchema,
+  type DesignBrief,
+  type Placement,
+} from '../../providers/llm/types.js';
 import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { ASSETS_ROOT, ASSETS_URL_PREFIX } from '../../platform/assets.js';
@@ -18,6 +23,8 @@ export const versionSelect = {
   versionNumber: true,
   imagePrompt: true,
   provider: true,
+  brief: true,
+  derivedFromVersionId: true,
   createdAt: true,
   artwork: { select: { storageKey: true } },
   mockup: { select: { storageKey: true } },
@@ -28,17 +35,25 @@ type VersionRow = {
   versionNumber: number;
   imagePrompt: string | null;
   provider: string;
+  brief: unknown;
+  derivedFromVersionId: string | null;
   createdAt: Date;
   artwork: { storageKey: string } | null;
   mockup: { storageKey: string } | null;
 };
 
 export function toVersionDto(version: VersionRow) {
+  const parsed = placementSchema.safeParse(
+    (version.brief as { placement?: unknown } | null)?.placement,
+  );
+
   return {
     id: version.id,
     versionNumber: version.versionNumber,
     imagePrompt: version.imagePrompt,
     provider: version.provider,
+    placement: parsed.success ? parsed.data : defaultPlacement,
+    derivedFromVersionId: version.derivedFromVersionId,
     createdAt: version.createdAt,
     artworkUrl: version.artwork
       ? localStorageProvider.publicUrl(version.artwork.storageKey)
@@ -120,6 +135,7 @@ export async function createDesignVersion(input: {
     productImage,
     artwork,
     printArea: parsePrintArea(project.product.printArea),
+    placement: brief.placement,
   });
 
   const mockupMeta = await sharp(mockup).metadata();
@@ -180,6 +196,106 @@ export async function createDesignVersion(input: {
     await tx.designProject.update({
       where: { id: projectId },
       data: { currentVersionId: created.id, status: 'READY' },
+    });
+
+    return created;
+  });
+
+  return toVersionDto(version);
+}
+
+
+/**
+ * Move or resize the artwork of an existing version.
+ *
+ * The artwork asset is reused as-is — only the mockup is re-rendered — so this
+ * costs nothing and takes milliseconds. The result is a new version rather than
+ * an edit, keeping every version immutable and giving the user an undo trail.
+ */
+export async function repositionDesignVersion(input: {
+  userId: string;
+  projectId: string;
+  versionId: string;
+  placement: Placement;
+}) {
+  const { userId, projectId, versionId, placement } = input;
+
+  const source = await prisma.designVersion.findFirst({
+    where: { id: versionId, projectId, project: { userId } },
+    select: {
+      id: true,
+      brief: true,
+      imagePrompt: true,
+      provider: true,
+      artworkAssetId: true,
+      artwork: { select: { storageKey: true, width: true, height: true } },
+      project: {
+        select: { product: { select: { imageUrl: true, printArea: true } } },
+      },
+    },
+  });
+
+  if (!source?.artwork || !source.artworkAssetId) {
+    throw new NotFoundError('Design version not found');
+  }
+
+  const artwork = await localStorageProvider.read(source.artwork.storageKey);
+  const productImage = await loadProductImage(source.project.product.imageUrl);
+
+  const mockup = await renderMockup({
+    productImage,
+    artwork,
+    printArea: parsePrintArea(source.project.product.printArea),
+    placement,
+  });
+
+  const mockupMeta = await sharp(mockup).metadata();
+  const mockupKey = `mockup/${projectId}/${randomUUID()}.png`;
+
+  await localStorageProvider.put(mockupKey, mockup, 'image/png');
+
+  const last = await prisma.designVersion.findFirst({
+    where: { projectId },
+    orderBy: { versionNumber: 'desc' },
+    select: { versionNumber: true },
+  });
+
+  const briefWithPlacement = {
+    ...(source.brief as Record<string, unknown>),
+    placement,
+  };
+
+  const version = await prisma.$transaction(async (tx) => {
+    const mockupAsset = await tx.asset.create({
+      data: {
+        userId,
+        kind: 'MOCKUP',
+        mimeType: 'image/png',
+        width: mockupMeta.width ?? 0,
+        height: mockupMeta.height ?? 0,
+        bytes: mockup.length,
+        storageKey: mockupKey,
+      },
+      select: { id: true },
+    });
+
+    const created = await tx.designVersion.create({
+      data: {
+        projectId,
+        versionNumber: (last?.versionNumber ?? 0) + 1,
+        brief: briefWithPlacement,
+        imagePrompt: source.imagePrompt,
+        artworkAssetId: source.artworkAssetId,
+        mockupAssetId: mockupAsset.id,
+        provider: source.provider,
+        derivedFromVersionId: source.id,
+      },
+      select: versionSelect,
+    });
+
+    await tx.designProject.update({
+      where: { id: projectId },
+      data: { currentVersionId: created.id, brief: briefWithPlacement },
     });
 
     return created;

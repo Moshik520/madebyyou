@@ -244,13 +244,29 @@ export type ChatMessage = {
   createdAt: string;
 };
 
+export type PrintArea = {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  shape?: string;
+};
+
+export type Placement = { x: number; y: number; scale: number };
+
 export type DesignProject = {
   id: string;
   title: string;
   status: string;
   createdAt: string;
   updatedAt: string;
-  product: { id: string; slug: string; name: string; imageUrl: string };
+  product: {
+    id: string;
+    slug: string;
+    name: string;
+    imageUrl: string;
+    printArea: PrintArea;
+  };
 };
 
 export function createDesignProject(
@@ -274,10 +290,23 @@ export type DesignVersion = {
   versionNumber: number;
   imagePrompt: string | null;
   provider: string;
+  placement: Placement;
+  derivedFromVersionId: string | null;
   createdAt: string;
   artworkUrl: string | null;
   mockupUrl: string | null;
 };
+
+export function placeDesignVersion(
+  projectId: string,
+  versionId: string,
+  placement: Placement,
+): Promise<{ version: DesignVersion }> {
+  return request(`/design-projects/${projectId}/versions/${versionId}/placement`, {
+    method: 'POST',
+    body: JSON.stringify(placement),
+  });
+}
 
 export function fetchConversation(projectId: string): Promise<{
   brief: DesignBrief;

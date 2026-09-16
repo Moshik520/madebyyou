@@ -293,3 +293,25 @@
   opacity: 0.55;
   cursor: not-allowed;
 }
+
+.bubble__buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.bubble__place {
+  padding: 7px 15px;
+  border: 1.5px solid var(--brand-blue);
+  border-radius: 999px;
+  background: var(--white);
+  color: var(--brand-blue-dark);
+  font-weight: 700;
+  font-size: 0.82rem;
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.bubble__place:hover {
+  background: var(--brand-blue);
+  color: var(--white);
+}

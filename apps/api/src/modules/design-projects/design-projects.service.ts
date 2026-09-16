@@ -9,7 +9,15 @@ const projectSelect = {
   createdAt: true,
   updatedAt: true,
   product: {
-    select: { id: true, slug: true, name: true, imageUrl: true },
+    // printArea is exposed so the browser can preview placement locally
+    // before asking the server to render the real mockup.
+    select: {
+      id: true,
+      slug: true,
+      name: true,
+      imageUrl: true,
+      printArea: true,
+    },
   },
 } as const;
 
