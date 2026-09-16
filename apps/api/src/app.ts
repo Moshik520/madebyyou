@@ -10,6 +10,7 @@ import { designProjectsRouter } from './modules/design-projects/design-projects.
 import { cartRouter } from './modules/cart/cart.routes.js';
 import { ordersRouter } from './modules/orders/orders.routes.js';
 import { designAgentRouter } from './modules/design-agent/agent.routes.js';
+import { uploadsRouter } from './modules/uploads/uploads.routes.js';
 import { STORAGE_ROOT } from './providers/storage/local.provider.js';
 import { ASSETS_ROOT } from './platform/assets.js';
 
@@ -57,6 +58,7 @@ export function createApp(): Express {
   app.use('/api/products', productsRouter); 
   app.use('/api/design-projects', designProjectsRouter);
   app.use('/api/design-projects', designAgentRouter);
+  app.use('/api/uploads', uploadsRouter);
   app.use('/api/cart', cartRouter);
   app.use('/api/orders', ordersRouter);
 

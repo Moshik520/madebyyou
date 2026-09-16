@@ -308,9 +308,45 @@ export function placeDesignVersion(
   });
 }
 
+export type UploadedAsset = {
+  id: string;
+  url: string;
+  width?: number;
+  height?: number;
+};
+
+/**
+ * Multipart upload: the browser sets its own Content-Type with a boundary, so
+ * the JSON header the shared client adds must not be sent here.
+ */
+export async function uploadImage(file: File): Promise<{ asset: UploadedAsset }> {
+  const body = new FormData();
+  body.append('file', file);
+
+  const token = getToken();
+  const headers: Record<string, string> = {};
+
+  if (token) headers.Authorization = `Bearer ${token}`;
+
+  const response = await fetch('/api/uploads', { method: 'POST', body, headers });
+  const payload: unknown = await response.json().catch(() => null);
+
+  if (!response.ok) {
+    const parsed = payload as ApiErrorBody | null;
+    throw new ApiError(
+      response.status,
+      parsed?.error?.code ?? 'UNKNOWN',
+      parsed?.error?.message ?? 'העלאת התמונה נכשלה',
+    );
+  }
+
+  return payload as { asset: UploadedAsset };
+}
+
 export function fetchConversation(projectId: string): Promise<{
   brief: DesignBrief;
   currentVersionId: string | null;
+  sourceImage: { id: string; url: string } | null;
   messages: ChatMessage[];
   versions: DesignVersion[];
 }> {
@@ -320,6 +356,7 @@ export function fetchConversation(projectId: string): Promise<{
 export function sendAgentMessage(
   projectId: string,
   content: string,
+  assetId?: string,
 ): Promise<{
   turn: AgentTurn;
   messages: ChatMessage[];
@@ -327,6 +364,6 @@ export function sendAgentMessage(
 }> {
   return request(`/design-projects/${projectId}/messages`, {
     method: 'POST',
-    body: JSON.stringify({ content }),
+    body: JSON.stringify(assetId ? { content, assetId } : { content }),
   });
 }

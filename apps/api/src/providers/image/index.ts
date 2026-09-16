@@ -1,8 +1,44 @@
+import { config } from '../../platform/config.js';
 import { mockImageProvider } from './mock.provider.js';
-import type { ImageGenProvider } from './types.js';
+import {
+  openAiImageEditProvider,
+  openAiImageProvider,
+} from './openai.provider.js';
+import { mockImageEditProvider } from './mock.provider.js';
+import type { ImageEditProvider, ImageGenProvider } from './types.js';
 
-// One implementation for now. A registry with a config switch arrives when a
-// real provider does — see ADR on picking an image model.
-export const imageGenProvider: ImageGenProvider = mockImageProvider;
+function createImageGenProvider(): ImageGenProvider {
+  switch (config.IMAGE_PROVIDER) {
+    case 'mock':
+      return mockImageProvider;
+    case 'openai':
+      return openAiImageProvider;
+    default:
+      throw new Error(
+        `Unknown image provider: ${config.IMAGE_PROVIDER as string}`,
+      );
+  }
+}
 
-export type { GenerateInput, ImageGenProvider } from './types.js';
+function createImageEditProvider(): ImageEditProvider {
+  switch (config.IMAGE_PROVIDER) {
+    case 'mock':
+      return mockImageEditProvider;
+    case 'openai':
+      return openAiImageEditProvider;
+    default:
+      throw new Error(
+        `Unknown image provider: ${config.IMAGE_PROVIDER as string}`,
+      );
+  }
+}
+
+export const imageGenProvider: ImageGenProvider = createImageGenProvider();
+export const imageEditProvider: ImageEditProvider = createImageEditProvider();
+
+export type {
+  EditInput,
+  GenerateInput,
+  ImageEditProvider,
+  ImageGenProvider,
+} from './types.js';

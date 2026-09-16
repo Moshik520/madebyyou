@@ -1,5 +1,6 @@
 import type { ErrorRequestHandler, RequestHandler } from 'express';
 import { z, ZodError } from 'zod';
+import { MulterError } from 'multer';
 import { AppError } from '../errors.js';
 import { config } from '../config.js';
 import { logger } from '../logger.js';
@@ -17,6 +18,20 @@ export const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
     if (err instanceof SyntaxError && 'body' in err) {
     res.status(400).json({
       error: { code: 'INVALID_JSON', message: 'Request body is not valid JSON' },
+    });
+    return;
+  }
+
+  // Upload limits are the user's problem, not a server fault.
+  if (err instanceof MulterError) {
+    res.status(400).json({
+      error: {
+        code: 'UPLOAD_REJECTED',
+        message:
+          err.code === 'LIMIT_FILE_SIZE'
+            ? 'הקובץ גדול מדי (מקסימום 8MB)'
+            : 'העלאת הקובץ נכשלה',
+      },
     });
     return;
   }

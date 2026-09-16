@@ -1,5 +1,10 @@
 import sharp from 'sharp';
-import type { GenerateInput, ImageGenProvider } from './types.js';
+import type {
+  EditInput,
+  GenerateInput,
+  ImageEditProvider,
+  ImageGenProvider,
+} from './types.js';
 
 /** Deterministic hue from the prompt, so the same brief always looks the same. */
 function hueFromPrompt(prompt: string): number {
@@ -81,5 +86,33 @@ export const mockImageProvider: ImageGenProvider = {
     await new Promise((resolve) => setTimeout(resolve, 700));
 
     return sharp(Buffer.from(buildSvg(input))).png().toBuffer();
+  },
+};
+
+/**
+ * Stand-in for an image-to-image model. Keeps the user's picture recognisable
+ * and stamps it, so the UPLOAD_TRANSFORM path can be exercised at no cost.
+ */
+export const mockImageEditProvider: ImageEditProvider = {
+  name: 'mock:edit',
+
+  async edit(input: EditInput): Promise<Buffer> {
+    await new Promise((resolve) => setTimeout(resolve, 700));
+
+    const label = Buffer.from(
+      `<svg xmlns="http://www.w3.org/2000/svg" width="${input.width}" height="${input.height}">
+         <rect x="0" y="0" width="${input.width}" height="${input.height}" fill="hsl(${hueFromPrompt(input.prompt)} 80% 60%)" opacity="0.28"/>
+         <text x="50%" y="${input.height - 40}" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="30" font-weight="700" fill="#12212e" opacity="0.55">MOCK EDIT</text>
+       </svg>`,
+    );
+
+    return sharp(input.image)
+      .resize(input.width, input.height, {
+        fit: 'contain',
+        background: { r: 0, g: 0, b: 0, alpha: 0 },
+      })
+      .composite([{ input: label, left: 0, top: 0 }])
+      .png()
+      .toBuffer();
   },
 };

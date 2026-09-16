@@ -3,8 +3,14 @@ import sharp from 'sharp';
 import { BadRequestError, NotFoundError } from '../../platform/errors.js';
 import { parsePrintArea, renderMockup } from '../../platform/compositor.js';
 import { prisma } from '../../platform/prisma.js';
-import { imageGenProvider } from '../../providers/image/index.js';
-import { buildImagePrompt } from '../../providers/image/prompt-builder.js';
+import {
+  imageEditProvider,
+  imageGenProvider,
+} from '../../providers/image/index.js';
+import {
+  buildEditPrompt,
+  buildImagePrompt,
+} from '../../providers/image/prompt-builder.js';
 import { localStorageProvider } from '../../providers/storage/local.provider.js';
 import {
   defaultPlacement,
@@ -65,17 +71,20 @@ export function toVersionDto(version: VersionRow) {
 }
 
 /** The agent can declare READY too early. The server decides for itself. */
-function assertGeneratable(brief: DesignBrief): void {
+function assertGeneratable(
+  brief: DesignBrief,
+  hasSourceImage: boolean,
+): void {
   if (!brief.artworkSource) {
     throw new BadRequestError('עוד לא ברור אם לייצר עיצוב או להשתמש בתמונה שלך');
   }
 
-  if (brief.artworkSource !== 'GENERATE') {
-    throw new BadRequestError('העלאת תמונות עדיין לא נתמכת');
+  if (brief.artworkSource === 'GENERATE' && !brief.subject) {
+    throw new BadRequestError('חסר תיאור של מה שיופיע בעיצוב');
   }
 
-  if (!brief.subject) {
-    throw new BadRequestError('חסר תיאור של מה שיופיע בעיצוב');
+  if (brief.artworkSource !== 'GENERATE' && !hasSourceImage) {
+    throw new BadRequestError('צריך להעלות תמונה כדי להמשיך');
   }
 }
 
@@ -108,27 +117,68 @@ export async function createDesignVersion(input: {
 }) {
   const { userId, projectId, brief } = input;
 
-  assertGeneratable(brief);
-
   const project = await prisma.designProject.findFirst({
     where: { id: projectId, userId },
-    select: { product: { select: { imageUrl: true, printArea: true } } },
+    select: {
+      sourceAsset: { select: { storageKey: true } },
+      product: { select: { imageUrl: true, printArea: true } },
+    },
   });
 
   if (!project) {
     throw new NotFoundError('Design project not found');
   }
 
-  // ---- produce the images (slow; no database locks held here) ----
-  const prompt = buildImagePrompt(brief);
+  assertGeneratable(brief, Boolean(project.sourceAsset));
 
-  const artwork = await imageGenProvider.generate({
-    prompt,
-    width: ARTWORK_SIZE,
-    height: ARTWORK_SIZE,
-  });
+  // ---- produce the artwork (slow; no database locks held here) ----
+  // Generation and transformation need different instructions, so the prompt
+  // is built per path rather than once.
+  const prompt =
+    brief.artworkSource === 'UPLOAD_TRANSFORM'
+      ? buildEditPrompt(brief)
+      : buildImagePrompt(brief);
 
-    const productImage = await loadProductImage(project.product.imageUrl);
+  // The router: artworkSource decides which capability runs — or whether any
+  // external model runs at all.
+  let raw: Buffer;
+  let providerName: string;
+
+  if (brief.artworkSource === 'GENERATE') {
+    raw = await imageGenProvider.generate({
+      prompt,
+      width: ARTWORK_SIZE,
+      height: ARTWORK_SIZE,
+    });
+    providerName = imageGenProvider.name;
+  } else {
+    const source = await localStorageProvider.read(
+      project.sourceAsset!.storageKey,
+    );
+
+    if (brief.artworkSource === 'UPLOAD_TRANSFORM') {
+      raw = await imageEditProvider.edit({
+        image: source,
+        prompt,
+        width: ARTWORK_SIZE,
+        height: ARTWORK_SIZE,
+      });
+      providerName = imageEditProvider.name;
+    } else {
+      // UPLOAD — the user's own picture, used as-is. No model, no cost.
+      raw = source;
+      providerName = 'none';
+    }
+  }
+
+  // Generated art sits on a large transparent canvas, so a big part of the file
+  // is empty margin. Trimming makes the artwork's bounds equal the design's —
+  // what the mockup needs to fill the print area, and what a printer needs to
+  // size the output. It is harmless on a photo, which has nothing to trim.
+  const artwork = await sharp(raw).trim().png().toBuffer();
+  const artworkMeta = await sharp(artwork).metadata();
+
+  const productImage = await loadProductImage(project.product.imageUrl);
 
 
   const mockup = await renderMockup({
@@ -159,8 +209,8 @@ export async function createDesignVersion(input: {
         userId,
         kind: 'ARTWORK',
         mimeType: 'image/png',
-        width: ARTWORK_SIZE,
-        height: ARTWORK_SIZE,
+        width: artworkMeta.width ?? ARTWORK_SIZE,
+        height: artworkMeta.height ?? ARTWORK_SIZE,
         bytes: artwork.length,
         storageKey: artworkKey,
       },
@@ -188,7 +238,7 @@ export async function createDesignVersion(input: {
         imagePrompt: prompt,
         artworkAssetId: artworkAsset.id,
         mockupAssetId: mockupAsset.id,
-        provider: imageGenProvider.name,
+        provider: providerName,
       },
       select: versionSelect,
     });

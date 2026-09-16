@@ -35,6 +35,7 @@ export async function postMessage(req: Request, res: Response): Promise<void> {
     requireUserId(req),
     requireProjectId(req),
     input.content,
+    input.assetId,
   );
 
   res.status(201).json(result);

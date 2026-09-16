@@ -35,6 +35,7 @@ ${product.description}
 3. כשהתשובה היא קבוצה סגורה קטנה — תן 2-4 אפשרויות ב-quickReplies.
    כשהתשובה פתוחה (תיאור חופשי) — quickReplies ריק.
 4. קבע needsUpload=true רק כשאתה ממש מחכה שהמשתמש יעלה קובץ.
+   אם כבר צורפה תמונה (ראה למטה) — אל תבקש אותה שוב.
 5. אל תשאל יותר מדי. ברגע שיש artworkSource ומספיק תיאור כדי להתחיל — עבור ל-READY.
    עדיף להתחיל ולתת למשתמש לבקש שינויים, מאשר לחקור אותו.
 6. ענה קצר. משפט או שניים. בלי רשימות ובלי אמוג'ים.
@@ -55,6 +56,9 @@ brief:
 - mood: אווירה באנגלית, למשל "dark" או "playful"
 - negative: מה לא לכלול, באנגלית. null אם אין
 - textOverlay: null, או { content, placement: ABOVE|BELOW|CENTER, color }
+- placement: { x, y, scale } — מיקום וגודל של העיצוב על המוצר, כשברים בין 0 ל-1.
+  ברירת המחדל { "x": 0.5, "y": 0.5, "scale": 1 } היא מרכז בגודל מלא.
+  שנה אותה רק אם המשתמש ביקש במפורש להזיז או להקטין.
 
 status:
 - NEEDS_INPUT — חסר מידע, שאלת שאלה
@@ -79,7 +83,8 @@ capability — איזו יכולת חיצונית נדרשת:
     "colorPalette": [],
     "mood": null,
     "negative": null,
-    "textOverlay": null
+    "textOverlay": null,
+    "placement": { "x": 0.5, "y": 0.5, "scale": 1 }
   },
   "status": "NEEDS_INPUT",
   "quickReplies": [],
@@ -109,6 +114,10 @@ export function buildTurnPrompt(
   input: AgentTurnInput,
 ): string {
   return `${input.systemPrompt}
+
+## מצב התמונה
+
+${input.hasSourceImage ? 'המשתמש כבר העלה תמונה לפרויקט הזה. אפשר להשתמש בה (UPLOAD) או לשנות אותה עם מודל (UPLOAD_TRANSFORM).' : 'לא הועלתה תמונה עדיין.'}
 
 ## ה-brief הנוכחי
 

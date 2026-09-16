@@ -1,6 +1,7 @@
 import { prisma } from '../../platform/prisma.js';
 import { NotFoundError } from '../../platform/errors.js';
 import { llmProvider } from '../../providers/llm/index.js';
+import { localStorageProvider } from '../../providers/storage/local.provider.js';
 import { buildSystemPrompt } from '../../providers/llm/system-prompt.js';
 import {
   designBriefSchema,
@@ -38,6 +39,7 @@ export async function getConversation(userId: string, projectId: string) {
     select: {
       brief: true,
       currentVersionId: true,
+      sourceAsset: { select: { id: true, storageKey: true } },
       conversation: {
         select: {
           messages: { select: messageSelect, orderBy: { createdAt: 'asc' } },
@@ -57,6 +59,12 @@ export async function getConversation(userId: string, projectId: string) {
   return {
     brief: parseBrief(project.brief),
     currentVersionId: project.currentVersionId,
+    sourceImage: project.sourceAsset
+      ? {
+          id: project.sourceAsset.id,
+          url: localStorageProvider.publicUrl(project.sourceAsset.storageKey),
+        }
+      : null,
     messages: project.conversation?.messages ?? [],
     versions: project.versions.map(toVersionDto),
   };
@@ -67,12 +75,14 @@ export async function sendMessage(
   userId: string,
   projectId: string,
   content: string,
+  assetId?: string,
 ) {
   const project = await prisma.designProject.findFirst({
     where: { id: projectId, userId },
     select: {
       id: true,
       brief: true,
+      sourceAssetId: true,
       product: { select: { name: true, description: true } },
       conversation: { select: { id: true } },
     },
@@ -80,6 +90,28 @@ export async function sendMessage(
 
   if (!project) {
     throw new NotFoundError('Design project not found');
+  }
+
+  // An attachment arrives with the message that references it. Only assets the
+  // user owns may be attached.
+  let sourceAssetId = project.sourceAssetId;
+
+  if (assetId && assetId !== sourceAssetId) {
+    const asset = await prisma.asset.findFirst({
+      where: { id: assetId, userId, kind: 'UPLOAD' },
+      select: { id: true },
+    });
+
+    if (!asset) {
+      throw new NotFoundError('Uploaded image not found');
+    }
+
+    await prisma.designProject.update({
+      where: { id: project.id },
+      data: { sourceAssetId: asset.id },
+    });
+
+    sourceAssetId = asset.id;
   }
 
   // One conversation per project, created lazily on the first message.
@@ -101,6 +133,7 @@ export async function sendMessage(
     systemPrompt: buildSystemPrompt(project.product),
     history,
     brief: parseBrief(project.brief),
+    hasSourceImage: Boolean(sourceAssetId),
     userMessage: content,
   });
 

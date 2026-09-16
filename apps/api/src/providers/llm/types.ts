@@ -73,6 +73,8 @@ export type AgentTurnInput = {
   systemPrompt: string;
   history: { role: 'USER' | 'ASSISTANT'; content: string }[];
   brief: DesignBrief | null;
+  /** Whether the user has already attached an image to this project. */
+  hasSourceImage: boolean;
   userMessage: string;
 };
 

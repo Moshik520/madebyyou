@@ -9,7 +9,9 @@ import {
   fetchDesignProject,
   placeDesignVersion,
   sendAgentMessage,
+  uploadImage,
   type Placement,
+  type UploadedAsset,
   type AgentTurn,
   type ChatMessage,
   type DesignBrief,
@@ -76,6 +78,10 @@ export function DesignerPage() {
   const [editing, setEditing] = useState<DesignVersion | null>(null);
   const [placing, setPlacing] = useState(false);
 
+  const [attachment, setAttachment] = useState<UploadedAsset | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
+
   const [draft, setDraft] = useState('');
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -99,6 +105,7 @@ export function DesignerPage() {
         setMessages(c.messages);
         setBrief(c.brief);
         setVersions(c.versions);
+        if (c.sourceImage) setAttachment(c.sourceImage);
       })
       .catch((err: unknown) => {
         if (!cancelled) {
@@ -137,7 +144,7 @@ export function DesignerPage() {
     setMessages((prev) => [...prev, optimistic]);
 
     try {
-      const data = await sendAgentMessage(projectId, text);
+      const data = await sendAgentMessage(projectId, text, attachment?.id);
 
       setMessages((prev) => [
         ...prev.filter((m) => m.id !== optimistic.id),
@@ -145,6 +152,8 @@ export function DesignerPage() {
       ]);
       setBrief(data.turn.brief);
       setTurn(data.turn);
+      // The project now owns the image; the composer badge has done its job.
+      setAttachment(null);
 
       if (data.version) {
         setVersions((prev) => [...prev, data.version!]);
@@ -166,6 +175,23 @@ export function DesignerPage() {
       navigate('/cart');
     } catch {
       /* the cart provider already surfaced the error */
+    }
+  }
+
+  async function handleFile(file: File | undefined) {
+    if (!file) return;
+
+    setUploading(true);
+    setError(null);
+
+    try {
+      const data = await uploadImage(file);
+      setAttachment(data.asset);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'העלאת התמונה נכשלה');
+    } finally {
+      setUploading(false);
+      if (fileRef.current) fileRef.current.value = '';
     }
   }
 
@@ -344,13 +370,45 @@ export function DesignerPage() {
               </div>
             )}
 
-            {turn?.needsUpload && (
+            {turn?.needsUpload && !attachment && (
               <div className="chat__upload-hint">
-                📎 העלאת קבצים תתווסף בשלב הבא — בינתיים אפשר להמשיך לתאר במילים.
+                📎 לחצו על הסיכה כדי לצרף תמונה.
+              </div>
+            )}
+
+            {attachment && (
+              <div className="chat__attachment">
+                <img src={attachment.url} alt="התמונה שהעלית" />
+                <span>תמונה מצורפת</span>
+                <button
+                  type="button"
+                  onClick={() => setAttachment(null)}
+                  aria-label="הסרת התמונה"
+                >
+                  ✕
+                </button>
               </div>
             )}
 
             <form className="chat__composer" onSubmit={handleSubmit}>
+              <input
+                ref={fileRef}
+                type="file"
+                accept="image/*"
+                hidden
+                onChange={(e) => void handleFile(e.target.files?.[0])}
+              />
+
+              <button
+                className="chat__attach"
+                type="button"
+                title="צירוף תמונה"
+                disabled={sending || uploading}
+                onClick={() => fileRef.current?.click()}
+              >
+                {uploading ? '…' : '📎'}
+              </button>
+
               <input
                 className="chat__input"
                 value={draft}

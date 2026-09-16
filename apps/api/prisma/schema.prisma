@@ -68,6 +68,9 @@ model DesignProject {
   title            String
   status           DesignProjectStatus @default(DRAFT)
   brief            Json?
+  /// The image the user uploaded for this project, if any. Kept on the project
+  /// rather than in the brief because it is our identifier, not the model's.
+  sourceAssetId    String?
   currentVersionId String?             @unique
   createdAt        DateTime            @default(now())
   updatedAt        DateTime            @updatedAt
@@ -75,6 +78,7 @@ model DesignProject {
   user           User            @relation(fields: [userId], references: [id], onDelete: Cascade)
   product        Product         @relation(fields: [productId], references: [id], onDelete: Restrict)
   conversation   Conversation?
+  sourceAsset    Asset?          @relation("ProjectSource", fields: [sourceAssetId], references: [id], onDelete: SetNull)
   versions       DesignVersion[] @relation("ProjectVersions")
   currentVersion DesignVersion?  @relation("CurrentVersion", fields: [currentVersionId], references: [id], onDelete: SetNull)
 
@@ -187,6 +191,7 @@ model Asset {
   user      User            @relation(fields: [userId], references: [id], onDelete: Cascade)
   artworkOf DesignVersion[] @relation("VersionArtwork")
   mockupOf  DesignVersion[] @relation("VersionMockup")
+  sourceOf  DesignProject[] @relation("ProjectSource")
 
   @@index([userId])
   @@map("assets")
