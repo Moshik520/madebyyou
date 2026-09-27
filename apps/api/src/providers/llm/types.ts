@@ -75,6 +75,8 @@ export type AgentTurnInput = {
   brief: DesignBrief | null;
   /** Whether the user has already attached an image to this project. */
   hasSourceImage: boolean;
+  /** How many designs have been produced so far in this project. */
+  versionCount: number;
   userMessage: string;
 };
 

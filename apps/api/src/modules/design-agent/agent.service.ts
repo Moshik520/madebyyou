@@ -122,6 +122,10 @@ export async function sendMessage(
       select: { id: true },
     }));
 
+  const versionCount = await prisma.designVersion.count({
+    where: { projectId: project.id },
+  });
+
   const history = await prisma.message.findMany({
     where: { conversationId: conversation.id },
     select: { role: true, content: true },
@@ -134,6 +138,7 @@ export async function sendMessage(
     history,
     brief: parseBrief(project.brief),
     hasSourceImage: Boolean(sourceAssetId),
+    versionCount,
     userMessage: content,
   });
 
