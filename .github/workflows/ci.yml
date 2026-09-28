@@ -30,6 +30,10 @@ jobs:
         env:
           DATABASE_URL: postgresql://ci:ci@localhost:5432/ci
 
+      # Type-aware lint rules read the Prisma types, so this runs after generate.
+      - name: Lint
+        run: npm run lint
+
       - name: Type check
         run: npx tsc --noEmit
 

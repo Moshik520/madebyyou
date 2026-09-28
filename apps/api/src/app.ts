@@ -3,6 +3,7 @@ import type { Express, Request, Response } from 'express';
 import { prisma } from './platform/prisma.js';
 import { errorHandler, notFoundHandler } from './platform/middleware/errorHandler.js';
 import { pinoHttp } from 'pino-http';  
+import type { IncomingMessage, ServerResponse } from 'node:http';
 import { logger } from './platform/logger.js';
 import { authRouter } from './modules/auth/auth.routes.js';
 import { productsRouter } from './modules/products/products.routes.js';
@@ -27,8 +28,9 @@ export function createApp(): Express {
   pinoHttp({
     logger,
     serializers: {
-      req: (req) => ({ id: req.id, method: req.method, url: req.url }),
-      res: (res) => ({ statusCode: res.statusCode }),
+        req: (req: IncomingMessage) => ({ id: req.id, method: req.method, url: req.url }),
+        res: (res: ServerResponse) => ({ statusCode: res.statusCode }),
+
     },
   }),
 );
