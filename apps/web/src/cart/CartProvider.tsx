@@ -18,20 +18,21 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   // The cart belongs to a user. Load it on sign-in, drop it on sign-out.
   useEffect(() => {
-    if (!user) {
-      setCart(null);
-      return;
-    }
-
     let cancelled = false;
 
-    fetchCart()
-      .then((data) => {
-        if (!cancelled) setCart(data.cart);
-      })
-      .catch(() => {
-        /* an empty cart is not an error worth showing on load */
-      });
+    const load = user
+      ? fetchCart()
+          .then((data) => {
+            if (!cancelled) setCart(data.cart);
+          })
+          .catch(() => {
+            /* an empty cart is not an error worth showing on load */
+          })
+      : Promise.resolve().then(() => {
+          if (!cancelled) setCart(null);
+        });
+
+    void load;
 
     return () => {
       cancelled = true;

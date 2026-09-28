@@ -87,6 +87,9 @@ export function DesignerPage() {
   const [error, setError] = useState<string | null>(null);
 
   const bottomRef = useRef<HTMLDivElement>(null);
+  // A counter rather than a timestamp: optimistic ids only need to be unique
+  // within this component, and Date.now() is an impure call.
+  const pendingId = useRef(0);
 
   const latestByAncestor = useMemo(
     () => buildLatestByAncestor(versions),
@@ -135,7 +138,7 @@ export function DesignerPage() {
 
     // Show the user's message immediately; the server echoes it back with an id.
     const optimistic: ChatMessage = {
-      id: `pending-${Date.now()}`,
+      id: `pending-${++pendingId.current}`,
       role: 'USER',
       content: text,
       designVersionId: null,

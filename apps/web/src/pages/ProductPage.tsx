@@ -12,27 +12,36 @@ export function ProductPage() {
   const { user } = useAuth();
   const { addItem, busy } = useCart();
 
-  const [product, setProduct] = useState<Product | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  // The result is tagged with the slug it belongs to, so navigating to another
+  // product shows a loading state without clearing anything up front.
+  const [loaded, setLoaded] = useState<{
+    slug: string;
+    product?: Product;
+    error?: string;
+  } | null>(null);
+
+  const current = loaded?.slug === slug ? loaded : null;
+  const product = current?.product ?? null;
+  const error = current?.error ?? null;
 
   useEffect(() => {
     if (!slug) return;
 
     let cancelled = false;
-    setProduct(null);
-    setError(null);
 
     fetchProduct(slug)
       .then((data) => {
-        if (!cancelled) setProduct(data.product);
+        if (!cancelled) setLoaded({ slug, product: data.product });
       })
       .catch((err: unknown) => {
         if (cancelled) return;
-        setError(
-          err instanceof ApiError && err.status === 404
-            ? 'המוצר לא נמצא'
-            : 'לא הצלחנו לטעון את המוצר',
-        );
+        setLoaded({
+          slug,
+          error:
+            err instanceof ApiError && err.status === 404
+              ? 'המוצר לא נמצא'
+              : 'לא הצלחנו לטעון את המוצר',
+        });
       });
 
     return () => {
