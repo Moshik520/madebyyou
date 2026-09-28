@@ -1,22 +1,9 @@
 import { query } from '@anthropic-ai/claude-agent-sdk';
 import { logger } from '../../platform/logger.js';
+import { extractJsonObject } from './json-extract.js';
 import { buildTurnPrompt } from './system-prompt.js';
 import { z } from 'zod';
 import { agentTurnSchema, type AgentTurn, type AgentTurnInput, type LLMProvider } from './types.js';
-
-/** Pull a JSON object out of model text, even if wrapped in prose or fences. */
-function extractJsonObject(text: string): unknown {
-  let t = text.trim();
-
-  const fence = t.match(/```(?:json)?\s*([\s\S]*?)```/i);
-  if (fence?.[1]) t = fence[1].trim();
-
-  const start = t.indexOf('{');
-  const end = t.lastIndexOf('}');
-  if (start !== -1 && end !== -1) t = t.slice(start, end + 1);
-
-  return JSON.parse(t);
-}
 
 async function askModel(prompt: string): Promise<string> {
   let raw = '';

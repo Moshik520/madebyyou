@@ -1,5 +1,7 @@
 # MadeByYou
 
+[![CI](https://github.com/Moshik520/madebyyou/actions/workflows/ci.yml/badge.svg)](https://github.com/Moshik520/madebyyou/actions/workflows/ci.yml)
+
 A print-on-demand store where you describe the design you want in a chat and
 get it back on the product. Built as a full-stack project: React frontend,
 Node/Express API, Postgres, and two AI models doing different jobs.
