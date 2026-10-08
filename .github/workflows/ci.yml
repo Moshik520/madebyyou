@@ -63,3 +63,64 @@ jobs:
 
       - name: Build
         run: npm run build
+
+  e2e:
+    name: E2E
+    runs-on: ubuntu-latest
+
+    # GitHub runs this container alongside the job, the way docker compose
+    # does locally.
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: apd
+          POSTGRES_PASSWORD: apd_local_dev
+          POSTGRES_DB: apd
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U apd -d apd"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DATABASE_URL: postgresql://apd:apd_local_dev@localhost:5432/apd
+      JWT_SECRET: ci-only-secret-value-that-is-long-enough-32
+      IMAGE_PROVIDER: mock
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Install API dependencies
+        run: npm ci
+        working-directory: apps/api
+
+      - name: Prepare the database
+        run: npx prisma migrate deploy && npx prisma db seed
+        working-directory: apps/api
+
+      - name: Install web dependencies
+        run: npm ci
+        working-directory: apps/web
+
+      - name: Install browsers
+        run: npx playwright install --with-deps
+        working-directory: apps/web
+
+      - name: Run end-to-end tests
+        run: npx playwright test
+        working-directory: apps/web
+
+      # Keep the report even when the run fails, which is exactly when it matters.
+      - uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
+        with:
+          name: playwright-report
+          path: apps/web/playwright-report/
+          retention-days: 7

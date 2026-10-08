@@ -6,7 +6,8 @@ import { defineConfig, globalIgnores } from 'eslint/config';
 export default defineConfig([
   globalIgnores(['dist', 'src/generated']),
   {
-    files: ['**/*.ts'],
+    files: ['src/**/*.ts'],
+
     extends: [js.configs.recommended, tseslint.configs.recommendedTypeChecked],
     languageOptions: {
       globals: globals.node,
