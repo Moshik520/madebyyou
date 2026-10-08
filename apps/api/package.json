@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "tsx watch --env-file=.env src/server.ts",
+    "serve": "tsx --env-file=.env src/server.ts",
     "build": "tsc",
     "lint": "eslint src",
     "start": "node dist/server.js",
