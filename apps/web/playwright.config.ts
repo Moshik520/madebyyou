@@ -13,6 +13,9 @@ import { defineConfig, devices } from '@playwright/test';
  */
 export default defineConfig({
   testDir: './e2e',
+  /* The dev servers compile on demand, so give assertions more room than
+  Playwright's 5s default, which assumes a prebuilt app. */
+  expect: { timeout: 10_000 },
   /* Run tests in files in parallel */
   fullyParallel: true,
   /* Fail the build on CI if you accidentally left test.only in the source code. */
