@@ -101,6 +101,10 @@ jobs:
         run: npm ci
         working-directory: apps/api
 
+      - name: Generate the Prisma client
+        run: npx prisma generate
+        working-directory: apps/api
+
       - name: Prepare the database
         run: npx prisma migrate deploy && npx prisma db seed
         working-directory: apps/api
