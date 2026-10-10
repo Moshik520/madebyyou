@@ -1,11 +1,11 @@
 import { expect, test } from '@playwright/test';
+import { CatalogPage } from './pages/CatalogPage';
 
 test('the catalog lists products', async ({ page }) => {
-  await page.goto('/');
+  const catalogPage = new CatalogPage(page);
 
-  await expect(
-    page.getByRole('heading', { name: 'המוצרים שלנו' }),
-  ).toBeVisible();
+  await catalogPage.goto();
 
-  await expect(page.getByRole('article').first()).toBeVisible();
+  await expect(catalogPage.title).toBeVisible();
+  await expect(catalogPage.productCards.first()).toBeVisible();
 });

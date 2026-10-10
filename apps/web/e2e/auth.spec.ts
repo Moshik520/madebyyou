@@ -1,14 +1,13 @@
 import { expect, test } from '@playwright/test';
-
+import { Navbar } from './pages/Navbar';
+import { RegisterPage } from './pages/RegisterPage';
 
 test('a new user can register and ends up signed in', async ({ page }) => {
-    const email = `e2e-${Date.now()}-${Math.random().toString(36).slice(2, 8)}@example.com`;
-  await page.goto('/register');
+  const email = `e2e-${Date.now()}-${Math.random().toString(36).slice(2, 8)}@example.com`;
 
-   await page.getByLabel('אימייל').fill(email);
-   await page.getByLabel('סיסמה').fill('Password123');
+  const registerPage = new RegisterPage(page);
+  await registerPage.goto();
+  await registerPage.register(email, 'Password123');
 
-  await page.getByRole('button', { name: 'יצירת חשבון' }).click();
-
-  await expect(page.getByText('שלום,')).toBeVisible();
+  await expect(new Navbar(page).greeting).toBeVisible();
 });

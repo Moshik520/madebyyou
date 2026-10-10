@@ -1,13 +1,19 @@
 import { expect, test } from './fixtures/auth';
+import { CartPage } from './pages/CartPage';
+import { CatalogPage } from './pages/CatalogPage';
+import { ProductPage } from './pages/ProductPage';
 
+test('a signed-in user can add a product to the cart', async ({
+  signedInPage: page,
+}) => {
+  const catalogPage = new CatalogPage(page);
+  const productPage = new ProductPage(page);
+  const cartPage = new CartPage(page);
 
-test('a signed-in user can add a product to the cart'
-, async ({ signedInPage: page }) => {
-  await page.goto('/');
+  await catalogPage.goto();
+  await catalogPage.openFirstProduct();
+  await productPage.addToCart();
 
-   await page.getByRole('article').first().getByRole('link').first().click();
-  await page.getByRole('button', { name: 'הוספה לעגלה' }).click();
-
-  await expect(page.getByRole('heading',{name: 'העגלה שלך'})).toBeVisible();
-   await expect(page.getByRole('button',{name: 'הוספת כמות'})).toBeVisible();
+  await expect(cartPage.title).toBeVisible();
+  await expect(cartPage.increaseQuantity).toBeVisible();
 });

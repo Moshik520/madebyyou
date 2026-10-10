@@ -1,4 +1,7 @@
 import { test as base, expect, type Page } from '@playwright/test';
+import { Navbar } from '../pages/Navbar';
+import { RegisterPage } from '../pages/RegisterPage';
+
 
 type AuthFixtures = {
   signedInPage: Page;
@@ -8,11 +11,10 @@ export const test = base.extend<AuthFixtures>({
   signedInPage: async ({ page }, use) => {
     const email = `e2e-${Date.now()}-${Math.random().toString(36).slice(2, 8)}@example.com`;
 
-    await page.goto('/register');
-    await page.getByLabel('אימייל').fill(email);
-    await page.getByLabel('סיסמה').fill('Password123');
-    await page.getByRole('button', { name: 'יצירת חשבון' }).click();
-    await expect(page.getByText('שלום,')).toBeVisible();
+    const registerPage = new RegisterPage(page);
+    await registerPage.goto();
+    await registerPage.register(email, 'Password123');
+    await expect(new Navbar(page).greeting).toBeVisible();
 
     await use(page);
   },
