@@ -33,7 +33,7 @@ export function LoginPage() {
         <h1 className="auth__title">התחברות</h1>
         <p className="auth__subtitle">שמחים לראות אתכם שוב.</p>
 
-        {error && <div className="auth__error">{error}</div>}
+        {error && <div className="auth__error" role="alert">{error}</div>}
 
         <form onSubmit={handleSubmit} noValidate>
           <label className="auth__field">

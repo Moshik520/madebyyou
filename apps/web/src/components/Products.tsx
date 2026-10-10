@@ -35,7 +35,7 @@ export function Products() {
         </p>
 
         {error && (
-          <div className="products__state products__state--error">
+          <div className="products__state products__state--error" role="alert">
             לא הצלחנו לטעון את הקטלוג: {error}
           </div>
         )}

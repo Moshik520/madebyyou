@@ -57,7 +57,7 @@ export function CartPage() {
         <h1 className="section__title">העגלה שלך</h1>
 
         {(error || checkoutError) && (
-          <div className="cart__error">{checkoutError ?? error}</div>
+          <div className="cart__error" role="alert">{checkoutError ?? error}</div>
         )}
 
         {isEmpty ? (

@@ -355,7 +355,7 @@ export function DesignerPage() {
             </div>
 
             {error && messages.length > 0 && (
-              <div className="chat__error">{error}</div>
+              <div className="chat__error" role="alert">{error}</div>
             )}
 
             {turn && turn.quickReplies.length > 0 && !sending && (
