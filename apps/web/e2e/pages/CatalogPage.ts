@@ -4,11 +4,14 @@ export class CatalogPage {
   readonly page: Page;
   readonly title: Locator;
   readonly productCards: Locator;
+  readonly error: Locator;
 
   constructor(page: Page) {
     this.page = page;
     this.title = page.getByRole('heading', { name: 'המוצרים שלנו' });
     this.productCards = page.getByRole('article');
+    this.error = page.getByRole('alert');
+
   }
 
   async goto() {
