@@ -1,27 +1,20 @@
 import react from '@vitejs/plugin-react'
 import { defineConfig } from 'vite'
 
-// https://vite.dev/config/
+// The API serves /api, plus the images it keeps on disk under /static and
+// /assets. Dev and preview both need these, and `preview` does not inherit
+// `server.proxy`, so the object is shared explicitly.
+const proxy = {
+  '/api': { target: 'http://localhost:3000', changeOrigin: true },
+  '/static': { target: 'http://localhost:3000', changeOrigin: true },
+  '/assets': { target: 'http://localhost:3000', changeOrigin: true },
+}
+
 export default defineConfig({
   plugins: [react()],
-  server: {
-        proxy: {
-      '/api': {
-        target: 'http://localhost:3000',
-        changeOrigin: true,
-      },
-      // Images the API serves from disk. Same-origin in the browser, so the
-      // relative URLs the API returns work unchanged in dev and in production.
-      '/static': {
-        target: 'http://localhost:3000',
-        changeOrigin: true,
-      },
-        '/assets': {
-        target: 'http://localhost:3000',
-        changeOrigin: true,
-      },
-
-    },
-
-  },
+  // Not the default 'assets': that path is already proxied to the API, which
+  // serves product images there, so a built bundle under /assets never loads.
+  build: { assetsDir: 'bundle' },
+  server: { proxy },
+  preview: { proxy },
 })

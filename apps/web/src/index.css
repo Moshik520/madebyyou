@@ -4,8 +4,10 @@
 :root {
   --brand-yellow: #f7c948;
   --brand-yellow-dark: #e0ae38;
-  --brand-blue: #56b6f7;
-  --brand-blue-dark: #2f9ce4;
+  /* Darkened from #56b6f7 / #2f9ce4: white text on the old blue measured
+     2.23:1, well under the 4.5:1 WCAG AA minimum. Caught by the axe scan. */
+  --brand-blue: #1a6ea8;
+  --brand-blue-dark: #15608f;
   --brand-blue-soft: #e5f2fa;
 
   --ink: #12212e;

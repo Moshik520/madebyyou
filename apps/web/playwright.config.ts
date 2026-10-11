@@ -29,7 +29,7 @@ export default defineConfig({
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
     /* Base URL to use in actions like `await page.goto('')`. */
-    baseURL: 'http://localhost:5173',
+    baseURL: 'http://localhost:4173',
 
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: 'on-first-retry',
@@ -90,8 +90,11 @@ export default defineConfig({
       reuseExistingServer: !process.env.CI,
     },
     {
-      command: 'npm run dev',
-      url: 'http://localhost:5173',
+      // A real build served from disk, not the dev server. The dev server
+      // compiles on demand and buckles under parallel workers, and this is
+      // also the bundle users actually get.
+      command: 'npm run build && npm run preview',
+      url: 'http://localhost:4173',
       reuseExistingServer: !process.env.CI,
     },
   ],
