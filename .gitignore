@@ -21,3 +21,5 @@ Thumbs.db
 # editor
 .vscode/*
 !.vscode/settings.json
+
+.env.prod

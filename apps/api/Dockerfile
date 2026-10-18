@@ -41,6 +41,10 @@ COPY --from=build /app/dist ./dist
 COPY --from=build /app/prisma ./prisma
 COPY --from=build /app/prisma.config.ts ./
 
+# Product images the API serves from disk. They are committed, unlike the
+# uploads and generated artwork under storage/.
+COPY assets ./assets
+
 
 EXPOSE 3000
 CMD ["node", "dist/server.js"]
