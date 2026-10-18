@@ -54,6 +54,24 @@ services:
       - certbot-webroot:/var/www/certbot
     depends_on:
       - api
+    # nginx caches certificates at startup, so it has to be told to reload
+    # after a renewal. Cheaper than watching the filesystem.
+    command: >-
+      /bin/sh -c "while :; do sleep 6h & wait $${!}; nginx -s reload; done
+      & nginx -g 'daemon off;'"
+
+  # Wakes up twice a day. certbot renews only inside the last 30 days of the
+  # certificate's life, so this is almost always a no-op.
+  certbot:
+    image: certbot/certbot
+    restart: unless-stopped
+    volumes:
+      - certbot-certs:/etc/letsencrypt
+      - certbot-webroot:/var/www/certbot
+    entrypoint: >-
+      /bin/sh -c "trap exit TERM; while :; do
+      certbot renew --webroot -w /var/www/certbot;
+      sleep 12h & wait $${!}; done"
 
 volumes:
   postgres-data:
