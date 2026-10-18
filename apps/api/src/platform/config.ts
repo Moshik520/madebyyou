@@ -7,7 +7,7 @@ const envSchema = z.object({
   JWT_SECRET: z.string().min(32, 'JWT_SECRET must be at least 32 characters'),
   JWT_EXPIRES_IN: z.string().default('7d'),
   PAYMENT_PROVIDER: z.enum(['mock']).default('mock'),
-  LLM_PROVIDER: z.enum(['agent-sdk']).default('agent-sdk'),
+  LLM_PROVIDER: z.enum(['agent-sdk', 'mock']).default('agent-sdk'),
   IMAGE_PROVIDER: z.enum(['mock', 'openai']).default('mock'),
   OPENAI_API_KEY: z.string().min(1).optional(),
   IMAGE_QUALITY: z.enum(['low', 'medium', 'high', 'xhigh', 'max']).default('low'),
