@@ -1,4 +1,3 @@
-import { query } from '@anthropic-ai/claude-agent-sdk';
 import { logger } from '../../platform/logger.js';
 import { extractJsonObject } from './json-extract.js';
 import { buildTurnPrompt } from './system-prompt.js';
@@ -6,6 +5,11 @@ import { z } from 'zod';
 import { agentTurnSchema, type AgentTurn, type AgentTurnInput, type LLMProvider } from './types.js';
 
 async function askModel(prompt: string): Promise<string> {
+  // Imported here instead of at module load, so the package can sit in
+  // devDependencies. Production runs LLM_PROVIDER=mock and never reaches this
+  // line, which keeps roughly 230MB of Claude Code out of the runtime image.
+  const { query } = await import('@anthropic-ai/claude-agent-sdk');
+
   let raw = '';
 
   for await (const message of query({
