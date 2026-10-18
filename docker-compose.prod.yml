@@ -46,9 +46,17 @@ services:
     restart: unless-stopped
     ports:
       - "80:80"
+      - "443:443"
+    volumes:
+      # nginx only reads the certificates; certbot writes them through its own
+      # mount below.
+      - certbot-certs:/etc/letsencrypt:ro
+      - certbot-webroot:/var/www/certbot
     depends_on:
       - api
 
 volumes:
   postgres-data:
   api-storage:
+  certbot-certs:
+  certbot-webroot:
